@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TabiLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #ddd8ce;
+  --border2: #c8c2b5;
+  --ink: #1a1814;
+  --ink2: #6b6560;
+  --ink3: #9c9590;
+  --accent: #c84b2f;
+  --accent-bg: #fdf1ee;
+  --blue: #2563a8;
+  --blue-bg: #eef4fc;
+  --green: #2a7a4b;
+  --green-bg: #eef7f2;
+  --gold: #b8860b;
+  --gold-bg: #fdf8ec;
+  --radius: 12px;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Noto Sans JP', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+
+/* ── Layout ── */
+#app { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; background: var(--bg); }
+#header { padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--surface); border-bottom: 2px solid var(--ink); }
+.logo { font-size: 20px; font-weight: 900; letter-spacing: -1px; color: var(--ink); }
+.logo em { color: var(--accent); font-style: normal; }
+.trip-chip { background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 6px; padding: 5px 10px; font-size: 11px; color: var(--ink2); cursor: pointer; display: flex; align-items: center; gap: 5px; font-family: var(--sans); max-width: 160px; }
+.trip-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trip-chip:active { background: var(--border); }
+
+#content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 72px; }
+#content::-webkit-scrollbar { width: 2px; }
+#content::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* ── Nav ── */
+#nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--surface); border-top: 2px solid var(--ink); display: flex; padding: 6px 0 max(6px, env(safe-area-inset-bottom)); z-index: 100; }
+.nb { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; cursor: pointer; }
+.nb .ic { font-size: 20px; transition: transform .12s; }
+.nb .lb { font-size: 9px; color: var(--ink3); font-weight: 500; transition: color .12s; letter-spacing: .3px; }
+.nb.active .lb { color: var(--accent); font-weight: 700; }
+.nb.active .ic { transform: scale(1.1); }
+.nb:active .ic { transform: scale(.88); }
+
+/* ── Pages ── */
+.page { display: none; animation: fu .2s ease both; }
+.page.active { display: block; }
+@keyframes fu { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Trip header bar ── */
+.trip-bar { margin: 12px; background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius); padding: 14px 16px; }
+.trip-bar .no { font-family: var(--mono); font-size: 11px; color: var(--ink3); margin-bottom: 2px; letter-spacing: .5px; }
+.trip-bar .name { font-size: 18px; font-weight: 900; }
+.trip-bar .dates { font-size: 11px; color: var(--ink2); margin-top: 4px; }
+.trip-bar .totrow { display: flex; gap: 16px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.trip-bar .totcol .lbl { font-size: 10px; color: var(--ink3); }
+.trip-bar .totcol .val { font-family: var(--mono); font-size: 16px; font-weight: 600; margin-top: 1px; }
+.trip-bar .totcol .val.red { color: var(--accent); }
+.trip-bar .totcol .val.blue { color: var(--blue); }
+
+/* ── Section title ── */
+.sec { font-size: 10px; font-weight: 700; color: var(--ink3); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 14px; margin: 4px 0 6px; }
+
+/* ── Timeline ── */
+.tl { margin: 0 12px 8px; }
+.tli { display: flex; gap: 10px; margin-bottom: 8px; position: relative; }
+.tli::before { content: ''; position: absolute; left: 17px; top: 36px; bottom: -8px; width: 1.5px; background: var(--border); }
+.tli:last-child::before { display: none; }
+.tld { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; border: 1.5px solid var(--border2); background: var(--surface); }
+.tlb { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 9px 11px; }
+.tlh { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; }
+.tlt { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.tla { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.tlm { font-size: 10px; color: var(--ink3); margin-top: 2px; }
+.tln { font-size: 11px; color: var(--ink2); margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border); line-height: 1.5; }
+.timebar { display: flex; align-items: center; gap: 6px; margin-top: 5px; padding: 4px 8px; background: var(--surface2); border-radius: 6px; font-family: var(--mono); font-size: 11px; }
+.timebar .arr { color: var(--green); }
+.timebar .dep { color: var(--accent); }
+.timebar .dur { color: var(--gold); margin-left: auto; font-weight: 600; }
+
+/* Tag badges */
+.tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; letter-spacing: .3px; vertical-align: middle; }
+.tag-ok { background: var(--green-bg); color: var(--green); border: 1px solid #b8e0ca; }
+.tag-ng { background: var(--surface2); color: var(--ink3); border: 1px solid var(--border); }
+.tag-pay { background: var(--blue-bg); color: var(--blue); border: 1px solid #c0d8f0; }
+
+/* ── Forms ── */
+.form-card { margin: 12px; background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius); padding: 16px; }
+.form-card h2 { font-size: 15px; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.fld { margin-bottom: 11px; }
+.fld label { font-size: 10px; font-weight: 700; color: var(--ink3); display: block; margin-bottom: 4px; letter-spacing: .5px; text-transform: uppercase; }
+.fld input, .fld textarea, .fld select {
+  width: 100%; background: var(--surface2); border: 1.5px solid var(--border2);
+  border-radius: 8px; padding: 9px 11px; color: var(--ink); font-family: var(--sans);
+  font-size: 13px; outline: none; transition: border-color .12s, background .12s;
+  -webkit-appearance: none;
+}
+.fld input:focus, .fld textarea:focus, .fld select:focus { border-color: var(--ink); background: var(--surface); }
+.fld textarea { resize: none; height: 64px; line-height: 1.5; }
+.fld select option { background: var(--surface); }
+.fld input[type="time"] { font-family: var(--mono); }
+.fld input[type="number"] { font-family: var(--mono); font-size: 20px; font-weight: 600; text-align: right; }
+
+/* Row layout */
+.row2 { display: flex; gap: 8px; }
+.row2 > .fld { flex: 1; margin-bottom: 0; }
+
+/* Amount display */
+.amt-display { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--accent); text-align: right; padding: 10px 0 2px; }
+.amt-display span { font-size: 14px; color: var(--ink3); font-weight: 400; margin-right: 3px; }
+
+/* Toggle row (精算対象) */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.toggle-row .lbl { font-size: 13px; font-weight: 700; }
+.toggle-row .sub { font-size: 10px; color: var(--ink3); }
+.toggle { position: relative; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: var(--border2); border-radius: 12px; cursor: pointer; transition: background .2s; }
+.slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform .2s; }
+input:checked + .slider { background: var(--green); }
+input:checked + .slider::before { transform: translateX(20px); }
+
+/* Content picker grid */
+.cpicker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.copt { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 4px; text-align: center; cursor: pointer; transition: all .12s; }
+.copt .em { font-size: 17px; }
+.copt .nm { font-size: 9px; color: var(--ink3); margin-top: 2px; display: block; font-weight: 500; }
+.copt.sel { border-color: var(--ink); background: var(--ink); }
+.copt.sel .nm { color: #ccc; }
+
+/* Pay method pills */
+.paypills { display: flex; flex-wrap: wrap; gap: 6px; }
+.paypill { padding: 5px 11px; border-radius: 20px; border: 1.5px solid var(--border2); font-size: 12px; cursor: pointer; background: var(--surface2); color: var(--ink2); transition: all .12s; font-family: var(--sans); }
+.paypill.sel { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); font-weight: 700; }
+
+/* Photo strip */
+.pstrip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.pthumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1.5px solid var(--border); }
+.padd { width: 64px; height: 64px; border-radius: 8px; border: 1.5px dashed var(--border2); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--ink3); cursor: pointer; flex-shrink: 0; }
+.padd:active { background: var(--surface2); }
+
+/* Map box */
+.mapbox { height: 120px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; cursor: pointer; margin-bottom: 11px; position: relative; overflow: hidden; }
+.mapbox .mgrid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 20px 20px; opacity: .4; }
+.mapbox .mpin { font-size: 28px; position: relative; z-index: 1; }
+.mapbox .mstat { font-size: 11px; color: var(--ink3); position: relative; z-index: 1; }
+.mapbox.located { background: var(--green-bg); border-color: var(--green); }
+
+/* Btn primary */
+.btnp { width: 100%; padding: 13px; background: var(--ink); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: var(--sans); cursor: pointer; transition: opacity .12s; margin-top: 4px; }
+.btnp:active { opacity: .8; }
+.btns { background: var(--surface2); color: var(--ink2); border: 1.5px solid var(--border2); border-radius: 8px; padding: 8px 14px; font-size: 12px; font-family: var(--sans); cursor: pointer; }
+.btns:active { background: var(--border); }
+.btn-red { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-family: var(--sans); cursor: pointer; }
+
+/* ── Trip list modal ── */
+.mov { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.mov.open { opacity: 1; pointer-events: all; }
+.mod { background: var(--surface); border-radius: 16px 16px 0 0; border-top: 2px solid var(--ink); width: 100%; max-width: 480px; padding: 16px; max-height: 85vh; overflow-y: auto; transform: translateY(30px); transition: transform .2s; }
+.mov.open .mod { transform: translateY(0); }
+.mh { width: 36px; height: 3px; background: var(--border2); border-radius: 2px; margin: 0 auto 14px; }
+.mod h2 { font-size: 16px; font-weight: 900; margin-bottom: 12px; }
+.tritem { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
+.tritem.cur { border-color: var(--accent); background: var(--accent-bg); }
+.tritem .ti-no { font-family: var(--mono); font-size: 10px; color: var(--ink3); margin-bottom: 1px; }
+.tritem .ti-name { font-size: 14px; font-weight: 700; }
+.tritem .ti-date { font-size: 10px; color: var(--ink3); margin-top: 2px; }
+.tritem .ti-tot { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); margin-top: 6px; }
+.ntbtn { width: 100%; padding: 12px; background: transparent; border: 1.5px dashed var(--border2); border-radius: 10px; font-size: 13px; color: var(--ink3); font-family: var(--sans); cursor: pointer; margin-top: 4px; }
+.ntbtn:active { background: var(--surface2); }
+
+/* ── Summary ── */
+.bitem { margin-bottom: 8px; }
+.blbl { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; color: var(--ink2); }
+.btrk { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.bfil { height: 100%; border-radius: 3px; transition: width .6s ease; }
+
+/* ── Settings (data export/import) ── */
+.settings-section { margin: 12px; }
+.settings-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.settings-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.settings-card p { font-size: 11px; color: var(--ink2); line-height: 1.6; margin-bottom: 10px; }
+.btn-row { display: flex; gap: 8px; }
+
+/* ── Toast ── */
+#toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-60px); background: var(--ink); color: white; padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; transition: transform .25s; white-space: nowrap; }
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 48px 20px; color: var(--ink3); }
+.empty .em { font-size: 40px; margin-bottom: 10px; }
+.empty p { font-size: 12px; line-height: 1.7; }
+
+/* ── Now btn (時刻) ── */
+.now-btn { padding: 5px 8px; font-size: 10px; font-weight: 700; background: var(--surface2); border: 1.5px solid var(--border2); border-radius: 6px; color: var(--ink2); cursor: pointer; white-space: nowrap; font-family: var(--sans); flex-shrink: 0; }
+.now-btn:active { background: var(--border); }
+.time-row { display: flex; gap: 5px; align-items: center; }
+.time-row input { flex: 1; }
+
+/* Version tag */
+.ver { font-family: var(--mono); font-size: 9px; color: var(--ink3); text-align: center; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="logo">Tabi<em>Log</em></div>
+    <div class="trip-chip" onclick="showTripModal()">
+      📋 <span id="cur-trip-name">出張・旅を選ぶ</span> ▾
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- ── HOME ── -->
+    <div class="page active" id="page-home">
+      <div class="trip-bar" id="trip-bar">
+        <div class="no" id="hb-no">—</div>
+        <div class="name" id="hb-name">出張・旅を選択してください</div>
+        <div class="dates" id="hb-dates"></div>
+        <div class="totrow">
+          <div class="totcol"><div class="lbl">全支出</div><div class="val red" id="hb-tot">¥0</div></div>
+          <div class="totcol"><div class="lbl">精算対象</div><div class="val blue" id="hb-seisan">¥0</div></div>
+          <div class="totcol"><div class="lbl">件数</div><div class="val" id="hb-cnt">0件</div></div>
+        </div>
+      </div>
+      <div class="sec">最近のログ</div>
+      <div class="tl" id="tl-home"></div>
+    </div>
+
+    <!-- ── CHECK-IN ── -->
+    <div class="page" id="page-checkin">
+      <div class="form-card">
+        <h2>📍 行動ログ</h2>
+        <div class="mapbox" id="mapbox" onclick="getLocation()">
+          <div class="mgrid"></div>
+          <div class="mpin">📍</div>
+          <div class="mstat" id="mstat">タップして現在地を取得</div>
+        </div>
+        <div class="fld"><label>場所名</label><input type="text" id="ci-place" placeholder="例：石巻港、東京駅…"></div>
+        <div class="fld">
+          <label>カテゴリ</label>
+          <select id="ci-cat">
+            <option value="訪問先">🏢 訪問先（仕事）</option>
+            <option value="飲食">🍜 飲食</option>
+            <option value="宿泊">🏨 宿泊</option>
+            <option value="観光">🌸 観光・レジャー</option>
+            <option value="移動">🚗 移動・乗換</option>
+            <option value="買い物">🛍️ 買い物</option>
+            <option value="その他">📌 その他</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="fld">
+            <label>到着時刻</label>
+            <div class="time-row">
+              <input type="time" id="ci-arrive">
+              <button class="now-btn" onclick="setNow('ci-arrive')">今</button>
+            </div>
+          </div>
+          <div class="fld">
+            <label>出発時刻</label>
+            <div class="time-row">
+              <input type="time" id="ci-depart">
+              <button class="now-btn" onclick="setNow('ci-depart')">今</button>
+            </div>
+          </div>
+        </div>
+        <div class="fld"><label>メモ</label><textarea id="ci-memo" placeholder="打ち合わせ内容、感想など…"></textarea></div>
+        <div class="fld">
+          <label>写真</label>
+          <div class="pstrip" id="pstrip">
+            <div class="padd" onclick="document.getElementById('pinput').click()">＋</div>
+          </div>
+          <input type="file" id="pinput" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
+        </div>
+        <button class="btnp" onclick="saveCheckin()">📌 チェックイン記録</button>
+      </div>
+    </div>
+
+    <!-- ── EXPENSE ── -->
+    <div class="page" id="page-expense">
+      <div class="form-card">
+        <h2>💴 支出を記録</h2>
+        <div class="toggle-row">
+          <div>
+            <div class="lbl">精算対象</div>
+            <div class="sub">出張費精算書に含める</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="exp-seisan" checked><span class="slider"></span></label>
+        </div>
+        <div class="fld"><label>内容</label>
+          <div class="cpicker" id="cpicker"></div>
+        </div>
+        <div class="fld"><label>金額（円）</label>
+          <input type="number" id="exp-amt" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="fld"><label>支払方法</label>
+          <div class="paypills" id="paypills"></div>
+        </div>
+        <div class="fld"><label>場所・店名</label><input type="text" id="exp-plc" placeholder="例：東横INN豊橋駅東口"></div>
+        <div class="fld"><label>メモ</label><input type="text" id="exp-memo" placeholder="例：中部飼料 鈴木所長へ、昼食代…"></div>
+        <button class="btnp" onclick="saveExpense()">追加する</button>
+      </div>
+    </div>
+
+    <!-- ── SUMMARY ── -->
+    <div class="page" id="page-summary">
+      <div class="trip-bar" style="margin-bottom:8px">
+        <div class="no" id="sb-no">—</div>
+        <div class="name" id="sb-name">集計</div>
+        <div class="totrow">
+          <div class="totcol"><div class="lbl">全支出</div><div class="val red" id="sb-tot">¥0</div></div>
+          <div class="totcol"><div class="lbl">精算対象</div><div class="val blue" id="sb-seisan">¥0</div></div>
+          <div class="totcol"><div class="lbl">個人負担</div><div class="val" id="sb-kojin">¥0</div></div>
+        </div>
+      </div>
+      <div class="sec">内容別</div>
+      <div style="margin:0 12px 12px" id="barchart"></div>
+      <div class="sec">全ログ</div>
+      <div class="tl" id="tl-all"></div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="page-settings">
+      <div class="settings-section">
+        <div class="settings-card">
+          <h3>📤 データをエクスポート</h3>
+          <p>全データをJSONファイルとして書き出します。iCloudやGoogleドライブに保存しておけばバックアップになります。機種変更時はこのファイルをインポートしてください。</p>
+          <button class="btnp" onclick="exportData()">JSONファイルを書き出す</button>
+        </div>
+        <div class="settings-card">
+          <h3>📥 データをインポート</h3>
+          <p>エクスポートしたJSONファイルを読み込みます。既存のデータに追加されます（上書きではありません）。</p>
+          <div class="btn-row">
+            <button class="btnp" style="flex:1" onclick="document.getElementById('import-input').click()">JSONファイルを読み込む</button>
+          </div>
+          <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
+        </div>
+        <div class="settings-card">
+          <h3>🗑 データを削除</h3>
+          <p>現在選択中の出張・旅のデータをすべて削除します。この操作は取り消せません。</p>
+          <button class="btn-red" onclick="deleteCurrentTrip()">現在の出張・旅を削除</button>
+        </div>
+        <div class="ver">TabiLog v2.0 · データはこのブラウザに保存されます</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div id="nav">
+    <div class="nb active" onclick="swPage('home',this)"><div class="ic">🏠</div><div class="lb">ホーム</div></div>
+    <div class="nb" onclick="swPage('checkin',this)"><div class="ic">📍</div><div class="lb">行動</div></div>
+    <div class="nb" onclick="swPage('expense',this)"><div class="ic">💴</div><div class="lb">支出</div></div>
+    <div class="nb" onclick="swPage('summary',this)"><div class="ic">📊</div><div class="lb">集計</div></div>
+    <div class="nb" onclick="swPage('settings',this)"><div class="ic">⚙️</div><div class="lb">設定</div></div>
+  </div>
+</div><!-- /app -->
+
+<!-- ── TRIP MODAL ── -->
+<div class="mov" id="trip-modal" onclick="closeTM(event)">
+  <div class="mod">
+    <div class="mh"></div>
+    <h2>📋 出張・旅を管理</h2>
+    <div id="trip-list-m"></div>
+    <button class="ntbtn" onclick="newTripPrompt()">＋ 新しい出張・旅を作成</button>
+  </div>
+</div>
+
+<!-- ── NEW TRIP MODAL ── -->
+<div class="mov" id="new-trip-modal" onclick="closeNTM(event)">
+  <div class="mod">
+    <div class="mh"></div>
+    <h2>✈️ 新しい出張・旅</h2>
+    <div class="fld"><label>管理番号（任意）</label><input type="text" id="nt-no" placeholder="例：TR-2026-03" style="font-family:var(--mono)"></div>
+    <div class="fld"><label>名前</label><input type="text" id="nt-name" placeholder="例：愛知出張、家族旅行 GW"></div>
+    <div class="row2" style="margin-bottom:12px">
+      <div class="fld" style="margin:0"><label>開始日</label><input type="date" id="nt-start"></div>
+      <div class="fld" style="margin:0"><label>終了日</label><input type="date" id="nt-end"></div>
+    </div>
+    <div class="fld"><label>目的地・概要（任意）</label><input type="text" id="nt-summary" placeholder="例：愛知県豊橋市、中部飼料打合せ"></div>
+    <button class="btnp" onclick="createTrip()">作成する</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// Data
+// ══════════════════════════════
+const SK = 'tabilog_v3';
+let S = { trips: [], curId: null, logs: [] };
+function load() { try { const s = localStorage.getItem(SK); if (s) S = JSON.parse(s); } catch(e) {} }
+function sv() { localStorage.setItem(SK, JSON.stringify(S)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ══════════════════════════════
+// Master data
+// ══════════════════════════════
+const CONTENTS = [
+  {id:'shinkansen', e:'🚄', n:'新幹線'},
+  {id:'expressway', e:'🛣️', n:'高速'},
+  {id:'train',      e:'🚃', n:'鉄道'},
+  {id:'taxi',       e:'🚕', n:'タクシー'},
+  {id:'bus',        e:'🚌', n:'バス'},
+  {id:'gasoline',   e:'⛽', n:'ガソリン'},
+  {id:'parking',    e:'🅿️', n:'駐車場'},
+  {id:'hotel',      e:'🏨', n:'宿泊'},
+  {id:'meal',       e:'🍜', n:'食事'},
+  {id:'drink',      e:'☕', n:'飲料'},
+  {id:'entertain',  e:'🎭', n:'娯楽'},
+  {id:'souvenir',   e:'🎁', n:'土産'},
+  {id:'shopping',   e:'🛍️', n:'買物'},
+  {id:'supplies',   e:'📦', n:'備品'},
+  {id:'meeting',    e:'🤝', n:'会議費'},
+  {id:'allowance',  e:'💰', n:'日当'},
+  {id:'other',      e:'📋', n:'その他'},
+];
+const PAYS = ['現金', 'カード', 'Suica', 'ETC', '電子マネー'];
+const BAR_COLS = ['#c84b2f','#2563a8','#2a7a4b','#b8860b','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a'];
+
+let selContent = 'shinkansen';
+let selPay = '現金';
+let photos = [], lat = null, lng = null;
+
+// ══════════════════════════════
+// Init
+// ══════════════════════════════
+load();
+renderCpicker();
+renderPaypills();
+renderStrip();
+autoSetArrive();
+refreshHome();
+refreshSum();
+if (!S.curId && S.trips.length) { S.curId = S.trips[0].id; refreshAll(); }
+updateTripChip();
+
+// ══════════════════════════════
+// Page switching
+// ══════════════════════════════
+function swPage(n, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + n).classList.add('active');
+  btn.classList.add('active');
+  if (n === 'home') refreshHome();
+  if (n === 'summary') refreshSum();
+  if (n === 'checkin') autoSetArrive();
+}
+
+// ══════════════════════════════
+// Trip management
+// ══════════════════════════════
+function curTrip() { return S.trips.find(t => t.id === S.curId) || null; }
+function curLogs() {
+  if (!S.curId) return [];
+  return S.logs.filter(l => l.tid === S.curId).sort((a,b) => b.ts - a.ts);
+}
+function updateTripChip() {
+  const t = curTrip();
+  document.getElementById('cur-trip-name').textContent = t ? (t.no ? t.no + ' ' + t.name : t.name) : '出張・旅を選ぶ';
+}
+function showTripModal() { renderTLM(); document.getElementById('trip-modal').classList.add('open'); }
+function closeTM(e) { if (e.target === document.getElementById('trip-modal')) document.getElementById('trip-modal').classList.remove('open'); }
+function renderTLM() {
+  const el = document.getElementById('trip-list-m');
+  if (!S.trips.length) { el.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:20px;font-size:12px">まだ出張・旅がありません</div>'; return; }
+  el.innerHTML = S.trips.map(t => {
+    const tot = S.logs.filter(l => l.tid === t.id && l.type === 'exp').reduce((s,l) => s + l.amt, 0);
+    const cur = t.id === S.curId;
+    return `<div class="tritem ${cur ? 'cur' : ''}" onclick="selTrip('${t.id}')">
+      <div class="ti-no">${t.no || '—'} ${cur ? '● 選択中' : ''}</div>
+      <div class="ti-name">${t.name}</div>
+      <div class="ti-date">${t.start || ''}${t.end ? ' 〜 ' + t.end : ''}${t.summary ? ' · ' + t.summary : ''}</div>
+      <div class="ti-tot">¥${tot.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+function selTrip(id) {
+  S.curId = id; sv();
+  document.getElementById('trip-modal').classList.remove('open');
+  updateTripChip(); refreshAll();
+}
+function newTripPrompt() {
+  document.getElementById('trip-modal').classList.remove('open');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('nt-start').value = today;
+  document.getElementById('nt-end').value = today;
+  ['nt-no','nt-name','nt-summary'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new-trip-modal').classList.add('open');
+}
+function closeNTM(e) { if (e.target === document.getElementById('new-trip-modal')) document.getElementById('new-trip-modal').classList.remove('open'); }
+function createTrip() {
+  const name = document.getElementById('nt-name').value.trim();
+  if (!name) { toast('名前を入力してください'); return; }
+  const trip = {
+    id: uid(), name,
+    no: document.getElementById('nt-no').value.trim(),
+    start: document.getElementById('nt-start').value,
+    end: document.getElementById('nt-end').value,
+    summary: document.getElementById('nt-summary').value.trim()
+  };
+  S.trips.unshift(trip); S.curId = trip.id; sv();
+  document.getElementById('new-trip-modal').classList.remove('open');
+  updateTripChip(); refreshAll();
+  toast('✈️ ' + name + ' を作成しました');
+}
+function deleteCurrentTrip() {
+  if (!S.curId) { toast('出張・旅を選択してください'); return; }
+  const t = curTrip();
+  if (!confirm(`「${t.name}」とすべてのログを削除しますか？`)) return;
+  S.logs = S.logs.filter(l => l.tid !== S.curId);
+  S.trips = S.trips.filter(t => t.id !== S.curId);
+  S.curId = S.trips.length ? S.trips[0].id : null;
+  sv(); updateTripChip(); refreshAll();
+  toast('🗑 削除しました');
+}
+
+// ══════════════════════════════
+// Check-in
+// ══════════════════════════════
+function setNow(id) {
+  const n = new Date();
+  document.getElementById(id).value = n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+}
+function autoSetArrive() {
+  const el = document.getElementById('ci-arrive');
+  if (!el.value) setNow('ci-arrive');
+}
+function getLocation() {
+  if (!navigator.geolocation) { toast('位置情報非対応のブラウザです'); return; }
+  document.getElementById('mstat').textContent = '取得中…';
+  navigator.geolocation.getCurrentPosition(p => {
+    lat = p.coords.latitude; lng = p.coords.longitude;
+    document.getElementById('mstat').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
+    document.getElementById('mapbox').classList.add('located');
+    toast('📍 現在地を取得しました');
+  }, () => {
+    document.getElementById('mstat').textContent = '取得できませんでした';
+    toast('位置情報の取得に失敗しました');
+  });
+}
+function addPhotos(inp) {
+  Array.from(inp.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => { photos.push(e.target.result); renderStrip(); };
+    r.readAsDataURL(f);
+  });
+}
+function renderStrip() {
+  const s = document.getElementById('pstrip'); s.innerHTML = '';
+  photos.forEach((src, i) => {
+    const img = document.createElement('img'); img.src = src; img.className = 'pthumb';
+    img.onclick = () => { photos.splice(i,1); renderStrip(); }; s.appendChild(img);
+  });
+  const a = document.createElement('div'); a.className = 'padd'; a.textContent = '＋';
+  a.onclick = () => document.getElementById('pinput').click(); s.appendChild(a);
+}
+function saveCheckin() {
+  if (!S.curId) { toast('まず出張・旅を選んでください'); showTripModal(); return; }
+  const place = document.getElementById('ci-place').value.trim() || '場所未設定';
+  S.logs.unshift({
+    id: uid(), tid: S.curId, type: 'ci',
+    cat: document.getElementById('ci-cat').value,
+    place, memo: document.getElementById('ci-memo').value,
+    arrive: document.getElementById('ci-arrive').value,
+    depart: document.getElementById('ci-depart').value,
+    lat, lng, photos: [...photos], ts: Date.now()
+  });
+  sv();
+  document.getElementById('ci-place').value = '';
+  document.getElementById('ci-memo').value = '';
+  document.getElementById('ci-arrive').value = '';
+  document.getElementById('ci-depart').value = '';
+  photos = []; renderStrip(); lat = null; lng = null;
+  document.getElementById('mapbox').classList.remove('located');
+  document.getElementById('mstat').textContent = 'タップして現在地を取得';
+  toast('📌 チェックイン記録しました'); refreshHome();
+}
+
+// ══════════════════════════════
+// Expense
+// ══════════════════════════════
+function renderCpicker() {
+  document.getElementById('cpicker').innerHTML = CONTENTS.map(c =>
+    `<div class="copt ${c.id === selContent ? 'sel' : ''}" onclick="selCont('${c.id}')">
+      <div class="em">${c.e}</div><span class="nm">${c.n}</span>
+    </div>`
+  ).join('');
+}
+function selCont(id) { selContent = id; renderCpicker(); }
+function renderPaypills() {
+  document.getElementById('paypills').innerHTML = PAYS.map(p =>
+    `<div class="paypill ${p === selPay ? 'sel' : ''}" onclick="selPayMethod('${p}')">${p}</div>`
+  ).join('');
+}
+function selPayMethod(p) { selPay = p; renderPaypills(); }
+function saveExpense() {
+  if (!S.curId) { toast('まず出張・旅を選んでください'); showTripModal(); return; }
+  const amt = parseInt(document.getElementById('exp-amt').value) || 0;
+  if (!amt) { toast('金額を入力してください'); return; }
+  const cont = CONTENTS.find(c => c.id === selContent);
+  S.logs.unshift({
+    id: uid(), tid: S.curId, type: 'exp',
+    cont: selContent, ce: cont.e, cn: cont.n,
+    amt, pay: selPay,
+    plc: document.getElementById('exp-plc').value,
+    memo: document.getElementById('exp-memo').value,
+    seisan: document.getElementById('exp-seisan').checked,
+    ts: Date.now()
+  });
+  sv();
+  document.getElementById('exp-amt').value = '';
+  document.getElementById('exp-plc').value = '';
+  document.getElementById('exp-memo').value = '';
+  toast('💴 ¥' + amt.toLocaleString() + ' を記録しました');
+  refreshHome();
+}
+
+// ══════════════════════════════
+// Rendering helpers
+// ══════════════════════════════
+function calcDur(arrive, depart) {
+  if (!arrive || !depart) return '';
+  const [ah,am] = arrive.split(':').map(Number);
+  const [dh,dm] = depart.split(':').map(Number);
+  let mins = (dh*60+dm) - (ah*60+am);
+  if (mins <= 0) return '';
+  const h = Math.floor(mins/60), m = mins%60;
+  return h > 0 ? (m > 0 ? h+'h'+m+'m' : h+'h') : m+'m';
+}
+function fmtTs(ts) {
+  const d = new Date(ts);
+  return (d.getMonth()+1) + '/' + d.getDate() + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+function rLog(l, showDel = false) {
+  const ts = fmtTs(l.ts);
+  const delBtn = showDel ? `<div style="margin-top:6px;text-align:right"><button class="btns" style="font-size:10px;padding:4px 8px" onclick="delLog('${l.id}')">🗑 削除</button></div>` : '';
+  if (l.type === 'exp') {
+    const seisanTag = l.seisan
+      ? `<span class="tag tag-ok">精算</span>`
+      : `<span class="tag tag-ng">個人</span>`;
+    const payTag = `<span class="tag tag-pay">${l.pay}</span>`;
+    return `<div class="tli">
+      <div class="tld">${l.ce}</div>
+      <div class="tlb">
+        <div class="tlh">
+          <div class="tlt">${l.cn}${seisanTag}${payTag}</div>
+          <div class="tla">¥${l.amt.toLocaleString()}</div>
+        </div>
+        <div class="tlm">${ts}${l.plc ? ' · ' + l.plc : ''}</div>
+        ${l.memo ? `<div class="tln">${l.memo}</div>` : ''}
+        ${delBtn}
+      </div>
+    </div>`;
+  } else {
+    const catEmoji = {訪問先:'🏢',飲食:'🍜',宿泊:'🏨',観光:'🌸',移動:'🚗',買い物:'🛍️',その他:'📌'}[l.cat] || '📍';
+    const dur = calcDur(l.arrive, l.depart);
+    const timebar = (l.arrive || l.depart) ? `<div class="timebar">
+      ${l.arrive ? `<span class="arr">▶ ${l.arrive}</span>` : ''}
+      ${l.arrive && l.depart ? '<span style="color:var(--border2)">—</span>' : ''}
+      ${l.depart ? `<span class="dep">■ ${l.depart}</span>` : ''}
+      ${dur ? `<span class="dur">${dur}</span>` : ''}
+    </div>` : '';
+    const ph = l.photos && l.photos.length ? `<div style="display:flex;gap:4px;margin-top:5px;overflow-x:auto">${l.photos.map(p=>`<img src="${p}" style="width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)">`).join('')}</div>` : '';
+    const mp = l.lat ? `<div style="margin-top:4px"><a href="https://maps.google.com?q=${l.lat},${l.lng}" target="_blank" style="color:var(--blue);font-size:10px;font-weight:700">🗺️ 地図で確認</a></div>` : '';
+    return `<div class="tli">
+      <div class="tld">${catEmoji}</div>
+      <div class="tlb">
+        <div class="tlh">
+          <div class="tlt">${l.place}</div>
+          <div style="font-size:10px;color:var(--ink3)">${l.cat}</div>
+        </div>
+        <div class="tlm">${ts}</div>
+        ${timebar}${ph}${mp}
+        ${l.memo ? `<div class="tln">${l.memo}</div>` : ''}
+        ${delBtn}
+      </div>
+    </div>`;
+  }
+}
+function delLog(id) {
+  if (!confirm('このログを削除しますか？')) return;
+  S.logs = S.logs.filter(l => l.id !== id); sv(); refreshAll();
+  toast('🗑 削除しました');
+}
+
+// ══════════════════════════════
+// Refresh
+// ══════════════════════════════
+function refreshAll() { refreshHome(); refreshSum(); }
+function refreshHome() {
+  const t = curTrip();
+  document.getElementById('hb-no').textContent = t ? (t.no || '管理番号なし') : '—';
+  document.getElementById('hb-name').textContent = t ? t.name : '出張・旅を選択してください';
+  document.getElementById('hb-dates').textContent = t ? ((t.start||'') + (t.end?' 〜 '+t.end:'') + (t.summary?' · '+t.summary:'')) : '';
+  const logs = curLogs();
+  const exps = logs.filter(l => l.type === 'exp');
+  const tot = exps.reduce((s,l) => s+l.amt, 0);
+  const seisan = exps.filter(l => l.seisan).reduce((s,l) => s+l.amt, 0);
+  document.getElementById('hb-tot').textContent = '¥' + tot.toLocaleString();
+  document.getElementById('hb-seisan').textContent = '¥' + seisan.toLocaleString();
+  document.getElementById('hb-cnt').textContent = logs.length + '件';
+  const tl = document.getElementById('tl-home');
+  const rec = logs.slice(0, 12);
+  tl.innerHTML = rec.length ? rec.map(l => rLog(l)).join('') :
+    '<div class="empty"><div class="em">📭</div><p>まだ記録がありません<br>行動ログか支出を追加してみましょう</p></div>';
+}
+function refreshSum() {
+  const t = curTrip();
+  document.getElementById('sb-no').textContent = t ? (t.no || '—') : '—';
+  document.getElementById('sb-name').textContent = t ? t.name : '出張・旅を選択';
+  const exps = curLogs().filter(l => l.type === 'exp');
+  const tot = exps.reduce((s,l) => s+l.amt, 0);
+  const seisan = exps.filter(l => l.seisan).reduce((s,l) => s+l.amt, 0);
+  const kojin = tot - seisan;
+  document.getElementById('sb-tot').textContent = '¥' + tot.toLocaleString();
+  document.getElementById('sb-seisan').textContent = '¥' + seisan.toLocaleString();
+  document.getElementById('sb-kojin').textContent = '¥' + kojin.toLocaleString();
+  // bar chart
+  document.getElementById('barchart').innerHTML = CONTENTS.map((c,i) => {
+    const sum = exps.filter(l => l.cont === c.id).reduce((s,l) => s+l.amt, 0);
+    if (!sum) return '';
+    const pct = Math.round(sum / tot * 100);
+    return `<div class="bitem">
+      <div class="blbl"><span>${c.e} ${c.n}</span><span style="font-family:var(--mono)">¥${sum.toLocaleString()} (${pct}%)</span></div>
+      <div class="btrk"><div class="bfil" style="width:${pct}%;background:${BAR_COLS[i % BAR_COLS.length]}"></div></div>
+    </div>`;
+  }).join('');
+  // all logs
+  const all = curLogs();
+  document.getElementById('tl-all').innerHTML = all.length ? all.map(l => rLog(l, true)).join('') :
+    '<div class="empty"><div class="em">📭</div><p>記録がありません</p></div>';
+}
+
+// ══════════════════════════════
+// Export / Import
+// ══════════════════════════════
+function exportData() {
+  const json = JSON.stringify(S, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href = url; a.download = 'tabilog_' + date + '.json';
+  a.click(); URL.revokeObjectURL(url);
+  toast('📤 エクスポートしました');
+}
+function importData(inp) {
+  const file = inp.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      // Merge trips (skip duplicates by id)
+      const existIds = new Set(S.trips.map(t => t.id));
+      (data.trips || []).forEach(t => { if (!existIds.has(t.id)) S.trips.push(t); });
+      const existLogIds = new Set(S.logs.map(l => l.id));
+      (data.logs || []).forEach(l => { if (!existLogIds.has(l.id)) S.logs.push(l); });
+      sv(); refreshAll(); updateTripChip();
+      toast('📥 インポートしました');
+    } catch(err) {
+      toast('⚠️ ファイルの読み込みに失敗しました');
+    }
+  };
+  r.readAsText(file);
+  inp.value = '';
+}
+
+// ══════════════════════════════
+// Toast
+// ══════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+</script>
+</body>
+</html>
