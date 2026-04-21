@@ -204,9 +204,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 .act-btn{font-size:13px;padding:7px 14px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--ink2);cursor:pointer;font-family:var(--sans)}
 .act-btn:active{opacity:.7}
 
-/* Photo strip */
-.ph-strip{display:flex;gap:4px;margin-top:5px;overflow-x:auto}
-.ph-img{width:54px;height:54px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)}
+
 
 /* Modal */
 .mov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -293,15 +291,6 @@ input:checked+.slider::before{transform:translateX(20px)}
         </div>
         <!-- Memo -->
         <div class="fld"><label>メモ（任意）</label><textarea id="ac-memo" placeholder="内容・メモ…"></textarea></div>
-        <!-- Photo -->
-        <div class="fld">
-          <label>写真（任意）</label>
-          <div class="paypills" style="gap:6px;margin-bottom:4px">
-            <div class="paypill" style="cursor:pointer" onclick="document.getElementById('pinput').click()">📷 写真を追加</div>
-          </div>
-          <div id="pstrip" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px"></div>
-          <input type="file" id="pinput" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
-        </div>
         <button class="btnp" onclick="saveAction()">記録する</button>
       </div>
     </div>
@@ -436,7 +425,7 @@ const CAT_ICON={移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',飛�
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
 let selCont='shinkansen', selPay='現金';
-let photos=[], lat=null, lng=null;
+let lat=null, lng=null;
 let selEv_='depart', editingId=null;
 
 // ══ Init ══
@@ -499,23 +488,6 @@ function getLocation(){
   });
 }
 
-// ══ Photos ══
-function addPhotos(inp){
-  Array.from(inp.files).forEach(f=>{
-    const r=new FileReader();
-    r.onload=e=>{photos.push(e.target.result);renderPstrip()};
-    r.readAsDataURL(f);
-  });
-}
-function renderPstrip(){
-  const s=document.getElementById('pstrip');s.innerHTML='';
-  photos.forEach((src,i)=>{
-    const img=document.createElement('img');img.src=src;
-    img.style.cssText='width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1.5px solid var(--border);cursor:pointer';
-    img.onclick=()=>{photos.splice(i,1);renderPstrip()};s.appendChild(img);
-  });
-}
-
 // ══ Save Action ══
 function saveAction(){
   if(!S.curId){toast('まず出張・旅を選んでください');swPage('home',document.querySelector('.nb'));return}
@@ -530,13 +502,13 @@ function saveAction(){
     cat:document.getElementById('ac-cat').value,
     place,
     memo:document.getElementById('ac-memo').value,
-    lat,lng,photos:[...photos],ts:Date.now()
+    lat,lng,ts:Date.now()
   });
   sv();
   document.getElementById('ac-place').value='';
   document.getElementById('ac-memo').value='';
   document.getElementById('ac-hhmm').value=nowHHMM();
-  photos=[];renderPstrip();lat=null;lng=null;
+  lat=null;lng=null;
   document.getElementById('gps-btn').textContent='📍 現在地';
   document.getElementById('gps-btn').classList.remove('located');
   toast('📌 記録しました');refreshLog();
@@ -686,7 +658,6 @@ function renderLogRow(l, isLast){
     const dotCls='dot-'+l.ev;
     const evLabel=EV_LABEL[l.ev]||l.ev;
     const icon=CAT_ICON[l.cat]||'📌';
-    const ph=l.photos&&l.photos.length?`<div class="ph-strip">${l.photos.map(p=>`<img class="ph-img" src="${p}">`).join('')}</div>`:'';
     const mp=l.lat?`<a href="https://maps.google.com?q=${l.lat},${l.lng}" target="_blank" style="color:var(--blue);font-size:11px;font-weight:700;display:inline-block;margin-top:3px">🗺️ 地図</a>`:'';
     return`<div class="tl-row ev-${l.ev}">
       <div class="tl-left">
@@ -702,7 +673,7 @@ function renderLogRow(l, isLast){
         </div>
         <div class="tl-sub">${l.cat}</div>
         ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
-        ${ph}${mp}
+        ${mp}
         ${actions}
       </div>
     </div>`;
