@@ -37,7 +37,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .ver-tag{font-family:var(--mono);font-size:10px;color:var(--ink3);background:var(--surface2);padding:2px 7px;border-radius:4px;border:1px solid var(--border)}
 
 /* Content & Nav */
-#content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:72px}
+#content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:90px}
 #content::-webkit-scrollbar{width:2px}
 #content::-webkit-scrollbar-thumb{background:var(--border2)}
 #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:2px solid var(--ink);display:flex;padding:6px 0 max(6px,env(safe-area-inset-bottom));z-index:100}
@@ -165,7 +165,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 .bfil{height:100%;border-radius:3px;transition:width .5s ease}
 
 /* Timeline container */
-.tl-wrap{margin:0 12px 12px;position:relative}
+.tl-wrap{margin:0 12px 32px;position:relative}
 .date-group{margin-bottom:4px}
 .date-label{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink2);padding:10px 0 5px 36px;border-bottom:2px solid var(--border2);margin-bottom:6px}
 
@@ -418,6 +418,23 @@ input:checked+.slider::before{transform:translateX(20px)}
   </div>
 </div>
 
+<!-- Trip Edit Modal -->
+<div class="mov" id="trip-edit-modal" onclick="closeTripEdit(event)">
+  <div class="mod">
+    <div class="mh"></div>
+    <h2>✏️ 出張・旅を編集</h2>
+    <div class="emf"><label>管理番号（任意）</label><input type="text" id="te-no" style="font-family:var(--mono)"></div>
+    <div class="emf"><label>名前</label><input type="text" id="te-name"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="emf" style="flex:1;margin:0"><label>開始日</label><input type="date" id="te-start"></div>
+      <div class="emf" style="flex:1;margin:0"><label>終了日</label><input type="date" id="te-end"></div>
+    </div>
+    <div class="emf"><label>目的地・概要（任意）</label><input type="text" id="te-summary"></div>
+    <button class="btnp" onclick="saveTripEdit()" style="margin-top:4px">保存する</button>
+    <button class="btns" onclick="closeTripEdit()" style="width:100%;margin-top:8px;text-align:center">キャンセル</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -619,6 +636,9 @@ function refreshHome(){
           <div class="tc-stat"><div class="lbl">精算対象</div><div class="val blue">¥${seisan.toLocaleString()}</div></div>
           <div class="tc-stat"><div class="lbl">件数</div><div class="val">${cnt}件</div></div>
         </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+          <button class="act-btn" onclick="openTripEdit('${t.id}')">✏️ 編集</button>
+        </div>
       </div>`;
     }).join('');
   } else {
@@ -628,6 +648,34 @@ function refreshHome(){
   el.innerHTML=html;
 }
 function selectTrip(id){S.curId=id;sv();refreshHome();refreshLog();toast('✅ '+curTrip().name+' を選択しました')}
+
+// ══ Trip Edit ══
+let editingTripId=null;
+function openTripEdit(id){
+  editingTripId=id;
+  const t=S.trips.find(x=>x.id===id);if(!t)return;
+  document.getElementById('te-no').value=t.no||'';
+  document.getElementById('te-name').value=t.name||'';
+  document.getElementById('te-start').value=t.start||'';
+  document.getElementById('te-end').value=t.end||'';
+  document.getElementById('te-summary').value=t.summary||'';
+  document.getElementById('trip-edit-modal').classList.add('open');
+}
+function closeTripEdit(e){
+  if(!e||e.target===document.getElementById('trip-edit-modal'))
+    document.getElementById('trip-edit-modal').classList.remove('open');
+}
+function saveTripEdit(){
+  const name=document.getElementById('te-name').value.trim();
+  if(!name){toast('名前を入力してください');return}
+  const t=S.trips.find(x=>x.id===editingTripId);if(!t)return;
+  t.no=document.getElementById('te-no').value.trim();
+  t.name=name;
+  t.start=document.getElementById('te-start').value;
+  t.end=document.getElementById('te-end').value;
+  t.summary=document.getElementById('te-summary').value.trim();
+  sv();closeTripEdit();refreshHome();refreshLog();toast('✅ 出張・旅を更新しました');
+}
 function newTripPrompt(){
   ['nt-no','nt-name','nt-summary'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('nt-start').value=today();
