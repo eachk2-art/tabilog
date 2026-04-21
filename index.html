@@ -52,6 +52,54 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .page{display:none;animation:fu .18s ease both}
 .page.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* ページ別背景色 */
+#page-action{background:#e8f4ff;min-height:100%}
+#page-expense{background:#fff0f3;min-height:100%}
+#page-log{background:#f5f0e8;min-height:100%}
+/* 行動ページ専用フォント拡大 */
+#page-action .form-card h2{font-size:20px}
+#page-action .fld label{font-size:13px}
+#page-action .fld input:not([type="text"].hhmm-wrap input),.fld select{font-size:17px}
+#page-action .place-input{font-size:17px}
+#page-action .fld select{font-size:17px}
+#page-action .fld input[type="date"]{font-size:19px}
+#page-action .ev-btn{font-size:16px}
+#page-action .ev-btn .ev-icon{font-size:24px}
+#page-action .gps-btn{font-size:14px}
+#page-action .fld textarea{font-size:16px}
+#page-action .btnp{font-size:17px;padding:16px}
+#page-action .req{font-size:12px}
+/* 支出ページ専用フォント拡大 */
+#page-expense .form-card h2{font-size:20px}
+#page-expense .fld label{font-size:13px}
+#page-expense .fld select{font-size:17px}
+#page-expense .fld input[type="date"]{font-size:19px}
+#page-expense .fld input[type="number"]{font-size:26px}
+#page-expense .fld input[type="text"]{font-size:17px}
+#page-expense .copt .nm{font-size:12px}
+#page-expense .copt .em{font-size:24px}
+#page-expense .paypill{font-size:15px;padding:8px 16px}
+#page-expense .toggle-row .lbl{font-size:17px}
+#page-expense .toggle-row .sub{font-size:13px}
+#page-expense .btnp{font-size:17px;padding:16px}
+#page-expense .req{font-size:12px}
+/* ログページ専用フォント拡大（場所名除く） */
+#page-log .lt-no{font-size:13px}
+#page-log .lt-name{font-size:19px}
+#page-log .ls .ll{font-size:12px}
+#page-log .ls .lv{font-size:17px}
+#page-log .date-label{font-size:16px}
+#page-log .tl-time{font-size:18px}
+#page-log .tl-ev{font-size:15px;padding:4px 11px}
+#page-log .tl-cat-icon{font-size:20px}
+#page-log .tl-sub{font-size:15px}
+#page-log .tl-memo{font-size:15px}
+#page-log .tl-exp-amt{font-size:20px}
+#page-log .tl-exp-name{font-size:17px}
+#page-log .tag{font-size:13px;padding:4px 9px}
+#page-log .act-btn{font-size:14px;padding:8px 16px}
+#page-log .blbl{font-size:14px}
+#page-log .sec{font-size:13px}
 
 /* ── HOME ── */
 .home-hdr{padding:14px 14px 8px;display:flex;align-items:center;justify-content:space-between}
@@ -278,6 +326,8 @@ input:checked+.slider::before{transform:translateX(20px)}
           <label>カテゴリ</label>
           <select id="ac-cat">
             <option value="移動">🚗 移動</option>
+            <option value="行動">🚶 行動</option>
+            <option value="日常">🏠 日常</option>
             <option value="新幹線">🚄 新幹線</option>
             <option value="鉄道">🚃 鉄道</option>
             <option value="バス">🚌 バス</option>
@@ -452,14 +502,15 @@ const CONTENTS=[
   {id:'bus',e:'🚌',n:'バス'},{id:'gasoline',e:'⛽',n:'ガソリン'},
   {id:'parking',e:'🅿️',n:'駐車場'},{id:'hotel',e:'🏨',n:'宿泊'},
   {id:'meal',e:'🍜',n:'食事'},{id:'drink',e:'☕',n:'飲料'},
+  {id:'conbini',e:'🏪',n:'コンビニ'},{id:'jidohanbaiki',e:'🥤',n:'自販機'},
   {id:'entertain',e:'🎭',n:'娯楽'},{id:'souvenir',e:'🎁',n:'土産'},
   {id:'shopping',e:'🛍️',n:'買物'},{id:'supplies',e:'📦',n:'備品'},
   {id:'meeting',e:'🤝',n:'会議費'},{id:'allowance',e:'💰',n:'日当'},
   {id:'other',e:'📋',n:'その他'},
 ];
 const PAYS=['現金','カード','Suica','ETC','電子マネー'];
-const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a'];
-const CAT_ICON={移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',飛行機:'✈️',訪問先:'🏢',宿泊:'🏨',飲食:'🍜',観光:'🌸',作業:'💻',買い物:'🛍️',その他:'📌'};
+const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457'];
+const CAT_ICON={移動:'🚗',行動:'🚶',日常:'🏠',新幹線:'🚄',鉄道:'🚃',バス:'🚌',飛行機:'✈️',訪問先:'🏢',宿泊:'🏨',飲食:'🍜',観光:'🌸',作業:'💻',買い物:'🛍️',その他:'📌'};
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
 let selCont='shinkansen', selPay='現金';
