@@ -52,10 +52,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .page{display:none;animation:fu .18s ease both}
 .page.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-/* ページ別背景色 */
-#page-action{background:#e8f4ff;min-height:100%}
-#page-expense{background:#fff0f3;min-height:100%}
-#page-log{background:#f5f0e8;min-height:100%}
+/* 行動・支出フォームカードの背景色 */
+#page-action .form-card{background:#e8f4ff;border-color:#5a9fd4}
+#page-expense .form-card{background:#fff0f0;border-color:#d45a5a}
 /* 行動ページ専用フォント拡大 */
 #page-action .form-card h2{font-size:20px}
 #page-action .fld label{font-size:13px}
