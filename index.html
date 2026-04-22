@@ -534,7 +534,10 @@ function setDefaults(){
   // バリデーション初期状態（行動は場所が空なのでdisabled、支出は金額が空なのでdisabled）
   checkExpValid();
 }
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function nowHHMM(){const n=new Date();return n.getHours().toString().padStart(2,'0')+n.getMinutes().toString().padStart(2,'0')}
 function setNow(id){document.getElementById(id).value=nowHHMM()}
 function fmtT(v){if(!v)return'';const s=String(v).replace(/\D/g,'').padStart(4,'0');return s.slice(0,2)+':'+s.slice(2,4)}
