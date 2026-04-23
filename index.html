@@ -422,6 +422,11 @@ input:checked+.slider::before{transform:translateX(20px)}
           </div>
         </div>
         <div class="settings-card">
+          <h3>📊 CSVで書き出す</h3>
+          <p>選択中の出張・旅のログをCSV形式で書き出します。GoogleスプレッドシートやExcelに貼り付けて蓄積管理できます。</p>
+          <button class="btnp" onclick="exportCSV()">CSVファイルを書き出す</button>
+        </div>
+        <div class="settings-card">
           <h3>🖨️ HTMLで書き出す</h3>
           <p>選択中の出張・旅のログを見やすいHTMLファイルとして書き出します。ブラウザで開いて閲覧・印刷できます。バックアップ後にアプリから削除する運用に最適です。</p>
           <button class="btnp" onclick="exportHTML()">HTMLファイルを書き出す</button>
@@ -968,6 +973,37 @@ function refreshStorage(){
     bar.style.width=pct+'%';
     bar.style.background=pct>80?'var(--red)':pct>50?'var(--orange)':'var(--blue)';
   }catch(e){}
+}
+
+// ══ CSV Export ══
+function exportCSV(){
+  const t=curTrip();
+  if(!t){toast('出張・旅を選択してください');return}
+  const logs=curLogs();
+  const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
+  const header='管理番号,出張名,日付,時刻,種別,カテゴリ,場所,金額,支払方法,精算対象,メモ';
+  const rows=logs.map(l=>{
+    const date=l.date||'';
+    const time=fmtT(l.hhmm)||'';
+    const no=t.no||'';
+    const name=t.name||'';
+    const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+    if(l.type==='action'){
+      return[esc(no),esc(name),date,time,EV_LABEL[l.ev]||l.ev,l.cat||'',esc(l.place||''),'','','',esc(l.memo||'')].join(',');
+    } else {
+      return[esc(no),esc(name),date,time,'支出',l.cn||'',esc(l.plc||''),l.amt||0,l.pay||'',l.seisan?'精算':'個人',esc(l.memo||'')].join(',');
+    }
+  });
+  const bom='\uFEFF'; // Excel文字化け防止
+  const csv=bom+header+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const no=t.no?t.no+'_':'';
+  const name=t.name.replace(/[\s　\/\\:*?"<>|]/g,'');
+  a.href=url;a.download=`tabilog_${no}${name}_${today().replace(/-/g,'')}.csv`;
+  a.click();URL.revokeObjectURL(url);
+  toast('📊 CSVを書き出しました');
 }
 
 // ══ HTML Export ══
