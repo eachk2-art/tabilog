@@ -213,22 +213,39 @@ input:checked+.slider::before{transform:translateX(20px)}
 
 /* Timeline container */
 .tl-wrap{margin:0 12px 32px;position:relative}
-.date-group{margin-bottom:4px}
-.date-label{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink2);padding:10px 0 5px 36px;border-bottom:2px solid var(--border2);margin-bottom:6px}
+.date-group{margin-bottom:12px}
+/* 日付ラベル強化 */
+.date-label{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--ink);color:white;
+  padding:8px 14px;border-radius:8px;margin-bottom:8px;
+}
+.date-label .dl-left{display:flex;align-items:baseline;gap:8px}
+.date-label .dl-date{font-family:var(--mono);font-size:15px;font-weight:700}
+.date-label .dl-dow{font-size:12px;color:#aaa}
+.date-label .dl-cnt{font-size:11px;color:#aaa}
+.date-label .dl-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.date-label .dl-exp{font-family:var(--mono);font-size:14px;font-weight:700;color:#ff9a7a}
+.date-label .dl-seisan{font-size:10px;color:#7ab8ff}
 
 /* Timeline row */
 .tl-row{display:flex;align-items:flex-start;gap:0;margin-bottom:0;position:relative}
 .tl-left{width:36px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
 .tl-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--surface);margin-top:14px;flex-shrink:0;z-index:1;position:relative}
-.tl-line{width:2px;flex:1;min-height:8px;background:var(--border)}
-.tl-line-top{width:2px;height:12px;background:var(--border)}
+/* ライン色を種別ごとに */
+.tl-line{width:3px;flex:1;min-height:8px;background:var(--border);border-radius:2px}
+.tl-row.ev-depart .tl-line{background:rgba(191,26,0,0.3)}
+.tl-row.ev-arrive .tl-line{background:rgba(10,94,34,0.3)}
+.tl-row.ev-start  .tl-line{background:rgba(184,79,0,0.3)}
+.tl-row.ev-end    .tl-line{background:rgba(85,85,85,0.3)}
+.tl-row.exp-row   .tl-line{background:rgba(0,63,160,0.2)}
 /* dot colors */
-.dot-depart{background:var(--red);box-shadow:0 0 0 2px var(--red-bg)}
-.dot-arrive{background:var(--green);box-shadow:0 0 0 2px var(--green-bg)}
-.dot-start{background:var(--orange);box-shadow:0 0 0 2px var(--orange-bg)}
-.dot-end{background:var(--gray);box-shadow:0 0 0 2px var(--gray-bg)}
-.dot-exp-seisan{background:var(--blue);box-shadow:0 0 0 2px var(--blue-bg)}
-.dot-exp-kojin{background:var(--border2);box-shadow:0 0 0 2px var(--surface2)}
+.dot-depart{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.dot-arrive{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.dot-start{background:var(--orange);box-shadow:0 0 0 3px var(--orange-bg)}
+.dot-end{background:var(--gray);box-shadow:0 0 0 3px var(--gray-bg)}
+.dot-exp-seisan{background:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.dot-exp-kojin{background:var(--border2);box-shadow:0 0 0 3px var(--surface2)}
 
 .tl-body{flex:1;padding:8px 0 8px 10px}
 .tl-main{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
@@ -778,12 +795,34 @@ function refreshLog(){
   }
   const byDate={};
   logs.forEach(l=>{const d=l.date||'日付なし';if(!byDate[d])byDate[d]=[];byDate[d].push(l)});
+  const DOWS=['日','月','火','水','木','金','土'];
   let html='';
   Object.keys(byDate).sort().forEach(d=>{
-    const [,m,day]=(d!=='日付なし')?d.split('-'):['','?','?'];
-    const dlabel=d==='日付なし'?'日付なし':`${parseInt(m)}/${parseInt(day)}`;
-    html+=`<div class="date-group"><div class="date-label">${dlabel}</div>`;
     const items=byDate[d];
+    // 日付ラベル計算
+    let dlabel='日付なし', dow='', cnt=items.length;
+    if(d!=='日付なし'){
+      const [y,m,day]=d.split('-').map(Number);
+      const dowIdx=new Date(y,m-1,day).getDay();
+      const dowStr=DOWS[dowIdx];
+      const dowColor=dowIdx===0?'#ff7a7a':dowIdx===6?'#7ab8ff':'#aaa';
+      dow=`<span class="dl-dow" style="color:${dowColor}">${dowStr}</span>`;
+      dlabel=`${m}/${day}`;
+    }
+    // 日付ごとの支出集計
+    const dayExps=items.filter(l=>l.type==='exp');
+    const dayTot=dayExps.reduce((s,l)=>s+l.amt,0);
+    const daySeisan=dayExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+    const expHtml=dayTot>0?`<div class="dl-exp">¥${dayTot.toLocaleString()}</div><div class="dl-seisan">精算 ¥${daySeisan.toLocaleString()}</div>`:'';
+
+    html+=`<div class="date-group">
+      <div class="date-label">
+        <div class="dl-left">
+          <span class="dl-date">${dlabel}</span>${dow}
+          <span class="dl-cnt">${cnt}件</span>
+        </div>
+        <div class="dl-right">${expHtml}</div>
+      </div>`;
     items.forEach((l,idx)=>{
       const isLast=idx===items.length-1&&Object.keys(byDate).sort().pop()===d;
       html+=renderLogRow(l,isLast);
@@ -828,7 +867,7 @@ function renderLogRow(l, isLast){
     const dotCls=l.seisan?'dot-exp-seisan':'dot-exp-kojin';
     const stag=l.seisan?`<span class="tag tag-ok">精算</span>`:`<span class="tag tag-ng">個人</span>`;
     const ptag=l.pay?`<span class="tag tag-pay">${l.pay}</span>`:'';
-    return`<div class="tl-row">
+    return`<div class="tl-row exp-row">
       <div class="tl-left">
         <div class="tl-dot ${dotCls}"></div>
         ${!isLast?'<div class="tl-line"></div>':''}
