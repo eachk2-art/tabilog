@@ -443,6 +443,27 @@ input:checked+.slider::before{transform:translateX(20px)}
           <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
         </div>
         <div class="settings-card">
+          <h3>📋 CSVファイルから一括登録</h3>
+          <p>スプレッドシートやテキストエディタで作成したCSVファイルを読み込み、選択中の出張・旅に一括登録します。</p>
+          <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:10px;font-size:11px;color:var(--ink2);line-height:1.7;font-family:var(--mono)">
+            日付,時刻,種別,カテゴリ,場所,金額,支払方法,精算対象,メモ<br>
+            2026/04/18,0529,出発,移動,自宅,,,,<br>
+            2026/04/18,0721,出発,新幹線,仙台駅,11410,カード,精算,
+          </div>
+          <button class="btnp" onclick="document.getElementById('csv-import-input').click()">CSVファイルを読み込む</button>
+          <input type="file" id="csv-import-input" accept=".csv,.txt" style="display:none" onchange="importCSV(this)">
+        </div>
+        <div class="settings-card">
+          <h3>🔗 スプレッドシートのURLから読み込む</h3>
+          <p>GoogleスプレッドシートをCSVとして公開し、そのURLを入力すると直接読み込めます。PCで事前入力したデータをスマホに取り込む場合に便利です。</p>
+          <div class="fld" style="margin-bottom:10px">
+            <label>公開URL（CSV形式）</label>
+            <input type="url" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." style="font-size:12px">
+          </div>
+          <button class="btnp" onclick="importFromURL()">URLから読み込む</button>
+          <div id="url-status" style="font-size:12px;color:var(--ink3);margin-top:8px;text-align:center"></div>
+        </div>
+        <div class="settings-card">
           <h3>🗑 削除</h3>
           <p>現在選択中の出張・旅のデータをすべて削除します。取り消せません。</p>
           <button class="btn-red" onclick="deleteCurrentTrip()">現在の出張・旅を削除</button>
@@ -1105,7 +1126,130 @@ function exportHTML(){
   toast('🖨️ HTMLを書き出しました');
 }
 
-// ══ Export / Import ══
+// ══ CSV Import ══
+function importCSV(inp){
+  const file=inp.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>parseAndImportCSV(e.target.result);
+  r.readAsText(file,'UTF-8');
+  inp.value='';
+}
+function importFromURL(){
+  if(!S.curId){toast('まず出張・旅を選んでください');return}
+  const url=document.getElementById('sheet-url').value.trim();
+  if(!url){toast('URLを入力してください');return}
+  document.getElementById('url-status').textContent='読み込み中…';
+  // GoogleスプレッドシートのURLをCSVエクスポートURLに変換
+  let fetchUrl=url;
+  const m=url.match(/\/spreadsheets\/d\/([^/]+)/);
+  if(m){
+    const gid=url.match(/gid=(\d+)/);
+    fetchUrl=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gid?'&gid='+gid[1]:''}`;
+  }
+  fetch(fetchUrl)
+    .then(r=>{
+      if(!r.ok)throw new Error('取得失敗');
+      return r.text();
+    })
+    .then(csv=>{
+      const cnt=parseAndImportCSV(csv);
+      document.getElementById('url-status').textContent='';
+    })
+    .catch(err=>{
+      document.getElementById('url-status').textContent='⚠️ 読み込みに失敗しました。URLとシートの公開設定を確認してください。';
+    });
+}
+function parseAndImportCSV(text){
+  if(!S.curId){toast('まず出張・旅を選んでください');return 0}
+  // BOM除去
+  text=text.replace(/^\uFEFF/,'');
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length){toast('データがありません');return 0}
+
+  // ヘッダー行スキップ（1行目が日付でなければヘッダーとみなす）
+  let start=0;
+  const first=lines[0].split(',')[0].replace(/"/g,'').trim();
+  if(isNaN(Date.parse(first))&&first!==''){start=1}
+
+  const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end'};
+  const CONT_MAP={'新幹線':'shinkansen','高速':'expressway','鉄道':'train','タクシー':'taxi',
+    'バス':'bus','ガソリン':'gasoline','駐車場':'parking','宿泊':'hotel','食事':'meal',
+    '飲料':'drink','コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain',
+    '土産':'souvenir','買物':'shopping','備品':'supplies','会議費':'meeting','日当':'allowance','その他':'other'};
+
+  let cnt=0;
+  for(let i=start;i<lines.length;i++){
+    const cols=parseCSVLine(lines[i]);
+    if(cols.length<3)continue;
+
+    // 列位置を判定（管理番号・出張名ありの場合は列をずらす）
+    let offset=0;
+    if(cols.length>=11){offset=2} // 管理番号・出張名あり
+
+    const dateRaw=(cols[offset+0]||'').trim().replace(/\//g,'-');
+    const hhmmRaw=(cols[offset+1]||'').trim().replace(/:/g,'').padStart(4,'0');
+    const kindRaw=(cols[offset+2]||'').trim();
+    const catRaw =(cols[offset+3]||'').trim();
+    const place  =(cols[offset+4]||'').trim();
+    const amtRaw =(cols[offset+5]||'').trim().replace(/[^\d]/g,'');
+    const pay    =(cols[offset+6]||'').trim();
+    const seisanRaw=(cols[offset+7]||'').trim();
+    const memo   =(cols[offset+8]||'').trim();
+
+    if(!dateRaw||!kindRaw)continue;
+
+    const date=dateRaw;
+    const hhmm=hhmmRaw;
+
+    if(kindRaw==='支出'){
+      // 支出ログ
+      const contEntry=Object.entries(CONT_MAP).find(([k])=>k===catRaw);
+      const contId=contEntry?contEntry[1]:'other';
+      const contE=CONTENTS.find(c=>c.id===contId)||{e:'📋',n:catRaw||'その他'};
+      S.logs.push({
+        id:uid(),tid:S.curId,type:'exp',
+        date,hhmm,
+        cont:contId,ce:contE.e,cn:contE.n,
+        amt:parseInt(amtRaw)||0,
+        pay:pay||'現金',
+        plc:place,memo,
+        seisan:seisanRaw==='精算'||seisanRaw==='○'||seisanRaw==='true',
+        ts:Date.now()
+      });
+      cnt++;
+    } else {
+      // 行動ログ
+      const ev=EV_MAP[kindRaw]||'arrive';
+      S.logs.push({
+        id:uid(),tid:S.curId,type:'action',
+        date,hhmm,ev,
+        cat:catRaw||'移動',
+        place:place||'場所未設定',
+        memo,lat:null,lng:null,ts:Date.now()
+      });
+      cnt++;
+    }
+  }
+  sv();refreshHome();refreshLog();
+  toast(`📋 ${cnt}件を登録しました`);
+  return cnt;
+}
+function parseCSVLine(line){
+  const result=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){
+      if(inQ&&line[i+1]==='"'){cur+='"';i++}
+      else inQ=!inQ;
+    } else if(c===','&&!inQ){
+      result.push(cur);cur='';
+    } else {cur+=c}
+  }
+  result.push(cur);
+  return result.map(s=>s.trim());
+}
+
+// ══ Export / Import (JSON) ══
 function exportData(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
