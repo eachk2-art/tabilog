@@ -343,16 +343,18 @@ input:checked+.slider::before{transform:translateX(20px)}
           <select id="ac-cat">
             <option value="移動">🚗 移動</option>
             <option value="行動">🚶 行動</option>
+            <option value="作業">💻 作業</option>
             <option value="日常">🏠 日常</option>
             <option value="新幹線">🚄 新幹線</option>
             <option value="鉄道">🚃 鉄道</option>
             <option value="バス">🚌 バス</option>
+            <option value="タクシー">🚕 タクシー</option>
             <option value="飛行機">✈️ 飛行機</option>
             <option value="訪問先">🏢 訪問先</option>
+            <option value="観光">🌸 観光</option>
             <option value="宿泊">🏨 宿泊</option>
             <option value="飲食">🍜 飲食</option>
-            <option value="観光">🌸 観光・レジャー</option>
-            <option value="作業">💻 作業</option>
+            <option value="娯楽">🎭 娯楽</option>
             <option value="買い物">🛍️ 買い物</option>
             <option value="その他">📌 その他</option>
           </select>
@@ -539,20 +541,41 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 
 // ══ Masters ══
 const CONTENTS=[
-  {id:'shinkansen',e:'🚄',n:'新幹線'},{id:'expressway',e:'🛣️',n:'高速'},
-  {id:'train',e:'🚃',n:'鉄道'},{id:'taxi',e:'🚕',n:'タクシー'},
-  {id:'bus',e:'🚌',n:'バス'},{id:'gasoline',e:'⛽',n:'ガソリン'},
-  {id:'parking',e:'🅿️',n:'駐車場'},{id:'hotel',e:'🏨',n:'宿泊'},
-  {id:'meal',e:'🍜',n:'食事'},{id:'drink',e:'☕',n:'飲料'},
-  {id:'conbini',e:'🏪',n:'コンビニ'},{id:'jidohanbaiki',e:'🥤',n:'自販機'},
-  {id:'entertain',e:'🎭',n:'娯楽'},{id:'souvenir',e:'🎁',n:'土産'},
-  {id:'shopping',e:'🛍️',n:'買物'},{id:'supplies',e:'📦',n:'備品'},
-  {id:'meeting',e:'🤝',n:'会議費'},{id:'allowance',e:'💰',n:'日当'},
-  {id:'other',e:'📋',n:'その他'},
+  // 共通
+  {id:'transport',  e:'🚗', n:'移動'},
+  {id:'shinkansen', e:'🚄', n:'新幹線'},
+  {id:'train',      e:'🚃', n:'鉄道'},
+  {id:'expressway', e:'🛣️', n:'高速'},
+  {id:'bus',        e:'🚌', n:'バス'},
+  {id:'taxi',       e:'🚕', n:'タクシー'},
+  {id:'airplane',   e:'✈️', n:'飛行機'},
+  {id:'gasoline',   e:'⛽', n:'ガソリン'},
+  {id:'parking',    e:'🅿️', n:'駐車場'},
+  {id:'hotel',      e:'🏨', n:'宿泊'},
+  {id:'meal',       e:'🍜', n:'飲食'},
+  {id:'drink',      e:'☕', n:'飲料'},
+  {id:'conbini',    e:'🏪', n:'コンビニ'},
+  {id:'jidohanbaiki',e:'🥤',n:'自販機'},
+  {id:'entertain',  e:'🎭', n:'娯楽'},
+  {id:'shopping',   e:'🛍️', n:'買い物'},
+  {id:'souvenir',   e:'🎁', n:'土産'},
+  {id:'supplies',   e:'📦', n:'備品'},
+  {id:'meeting',    e:'🤝', n:'会議費'},
+  {id:'allowance',  e:'💰', n:'日当'},
+  {id:'other',      e:'📋', n:'その他'},
 ];
 const PAYS=['現金','カード','Suica','ETC','電子マネー'];
-const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457'];
-const CAT_ICON={移動:'🚗',行動:'🚶',日常:'🏠',新幹線:'🚄',鉄道:'🚃',バス:'🚌',飛行機:'✈️',訪問先:'🏢',宿泊:'🏨',飲食:'🍜',観光:'🌸',作業:'💻',買い物:'🛍️',その他:'📌'};
+const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457','#00838f','#4527a0'];
+const CAT_ICON={
+  // 共通
+  移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
+  宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
+  // 行動のみ
+  行動:'🚶',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
+  // 支出のみ
+  高速:'🛣️',ガソリン:'⛽',駐車場:'🅿️',飲料:'☕',コンビニ:'🏪',
+  自販機:'🥤',土産:'🎁',備品:'📦',会議費:'🤝',日当:'💰',
+};
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
 let selCont='shinkansen', selPay='現金';
@@ -1042,7 +1065,13 @@ function exportHTML(){
 
   const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
   const EV_COLOR={depart:'#bf1a00',arrive:'#0a5e22',start:'#b84f00',end:'#555'};
-  const CAT_ICON={移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',飛行機:'✈️',訪問先:'🏢',宿泊:'🏨',飲食:'🍜',観光:'🌸',作業:'💻',買い物:'🛍️',その他:'📌'};
+  const CAT_ICON={
+    移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
+    宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
+    行動:'🚶',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
+    高速:'🛣️',ガソリン:'⛽',駐車場:'🅿️',飲料:'☕',コンビニ:'🏪',
+    自販機:'🥤',土産:'🎁',備品:'📦',会議費:'🤝',日当:'💰',
+  };
 
   let rows='';
   Object.keys(byDate).sort().forEach(d=>{
@@ -1172,10 +1201,15 @@ function parseAndImportCSV(text){
   if(isNaN(Date.parse(first))&&first!==''){start=1}
 
   const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end'};
-  const CONT_MAP={'新幹線':'shinkansen','高速':'expressway','鉄道':'train','タクシー':'taxi',
-    'バス':'bus','ガソリン':'gasoline','駐車場':'parking','宿泊':'hotel','食事':'meal',
-    '飲料':'drink','コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain',
-    '土産':'souvenir','買物':'shopping','備品':'supplies','会議費':'meeting','日当':'allowance','その他':'other'};
+  const CONT_MAP={
+    '移動':'transport','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
+    'バス':'bus','タクシー':'taxi','飛行機':'airplane','ガソリン':'gasoline',
+    '駐車場':'parking','宿泊':'hotel','飲食':'meal','飲料':'drink',
+    'コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain','買い物':'shopping',
+    '土産':'souvenir','備品':'supplies','会議費':'meeting','日当':'allowance','その他':'other',
+    // 旧名称の互換
+    '食事':'meal','買物':'shopping',
+  };
 
   let cnt=0;
   for(let i=start;i<lines.length;i++){
