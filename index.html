@@ -1208,7 +1208,7 @@ function parseAndImportCSV(text){
     const seisanRaw=(cols[offset+8]||'').trim();
     const memo   =(cols[offset+9]||'').trim();
 
-    if(!dateRaw||!kindRaw)continue;
+    if(!dateRaw||!hhmmRaw||hhmmRaw==='0000'||!kindRaw)continue;
 
     const date=dateRaw;
     const hhmm=hhmmRaw;
