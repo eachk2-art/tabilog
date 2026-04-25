@@ -367,6 +367,7 @@ input:checked+.slider::before{transform:translateX(20px)}
           </div>
         </div>
         <!-- Memo -->
+        <div class="fld"><label>詳細（任意）</label><input type="text" id="ac-detail" placeholder="例：はやぶさ102号、田中部長と打合せ…"></div>
         <div class="fld"><label>メモ（任意）</label><textarea id="ac-memo" placeholder="内容・メモ…"></textarea></div>
         <button class="btnp" id="btn-action" onclick="saveAction()" disabled>記録する</button>
       </div>
@@ -389,7 +390,8 @@ input:checked+.slider::before{transform:translateX(20px)}
         </div>
         <div class="fld"><label>金額（円）<span class="req">必須</span></label><input type="number" id="exp-amt" placeholder="0" inputmode="numeric" oninput="checkExpValid()"></div>
         <div class="fld"><label>支払方法</label><div class="paypills" id="paypills"></div></div>
-        <div class="fld"><label>場所・店名</label><input type="text" id="exp-plc" placeholder="例：東横INN豊橋駅東口"></div>
+        <div class="fld"><label>場所・店名</label><input type="text" id="exp-plc" placeholder="例：仙台駅、東横INN豊橋駅東口"></div>
+        <div class="fld"><label>詳細（任意）</label><input type="text" id="exp-detail" placeholder="例：仙台→東京、シングル1泊…"></div>
         <div class="fld"><label>メモ</label><input type="text" id="exp-memo" placeholder="例：中部飼料 鈴木所長へ…"></div>
         <button class="btnp" id="btn-expense" onclick="saveExpense()" disabled>追加する</button>
       </div>
@@ -680,11 +682,13 @@ function saveAction(){
     hhmm,
     cat:document.getElementById('ac-cat').value,
     place,
+    detail:document.getElementById('ac-detail').value,
     memo:document.getElementById('ac-memo').value,
     lat,lng,ts:Date.now()
   });
   sv();
   document.getElementById('ac-place').value='';
+  document.getElementById('ac-detail').value='';
   document.getElementById('ac-memo').value='';
   document.getElementById('ac-hhmm').value=nowHHMM();
   lat=null;lng=null;
@@ -719,6 +723,7 @@ function saveExpense(){
     cont:selCont,ce:cont.e,cn:cont.n,
     amt,pay:selPay,
     plc:document.getElementById('exp-plc').value,
+    detail:document.getElementById('exp-detail').value,
     memo:document.getElementById('exp-memo').value,
     seisan:document.getElementById('exp-seisan').checked,
     ts:Date.now()
@@ -726,6 +731,7 @@ function saveExpense(){
   sv();
   document.getElementById('exp-amt').value='';
   document.getElementById('exp-plc').value='';
+  document.getElementById('exp-detail').value='';
   document.getElementById('exp-memo').value='';
   document.getElementById('exp-date').value=today();
   document.getElementById('exp-hhmm').value=nowHHMM();
@@ -906,6 +912,7 @@ function renderLogRow(l, isLast){
           <span class="tl-place">${l.place}</span>
         </div>
         <div class="tl-sub">${l.cat}</div>
+        ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
         ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
         ${mp}
         ${actions}
@@ -930,6 +937,7 @@ function renderLogRow(l, isLast){
           ${stag}${ptag}
         </div>
         <div class="tl-sub">${l.plc||''}</div>
+        ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
         ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
         ${actions}
       </div>
@@ -957,6 +965,7 @@ function openEdit(id){
       <div class="emf"><label>時刻 hhmm</label><div class="hhmm-wrap"><input type="text" id="ed-hhmm" value="${l.hhmm||''}" maxlength="4" inputmode="numeric"><span class="now-btn" onclick="setNow('ed-hhmm')">今</span></div></div>
       <div class="emf"><label>場所名</label><input type="text" id="ed-place" value="${l.place||''}"></div>
       <div class="emf"><label>カテゴリ</label><select id="ed-cat">${catOpts}</select></div>
+      <div class="emf"><label>詳細</label><input type="text" id="ed-detail" value="${l.detail||''}" placeholder="例：はやぶさ102号、田中部長と打合せ…"></div>
       <div class="emf"><label>メモ</label><textarea id="ed-memo">${l.memo||''}</textarea></div>`;
   } else {
     const contOpts=CONTENTS.map(c=>`<option value="${c.id}" ${c.id===l.cont?'selected':''}>${c.e} ${c.n}</option>`).join('');
@@ -968,6 +977,7 @@ function openEdit(id){
       <div class="emf"><label>金額</label><input type="number" id="ed-amt" value="${l.amt||0}" inputmode="numeric" style="font-family:var(--mono);font-size:18px;text-align:right"></div>
       <div class="emf"><label>支払方法</label><select id="ed-pay">${payOpts}</select></div>
       <div class="emf"><label>場所</label><input type="text" id="ed-plc" value="${l.plc||''}"></div>
+      <div class="emf"><label>詳細</label><input type="text" id="ed-detail" value="${l.detail||''}" placeholder="例：仙台→東京、シングル1泊…"></div>
       <div class="emf"><label>メモ</label><textarea id="ed-memo">${l.memo||''}</textarea></div>
       <div class="emf" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
         <label style="text-transform:none;font-size:14px;font-weight:700;color:var(--ink)">精算対象</label>
@@ -989,6 +999,7 @@ function saveEdit(){
     l.hhmm=document.getElementById('ed-hhmm').value.replace(/\D/g,'').padStart(4,'0');
     l.place=document.getElementById('ed-place').value;
     l.cat=document.getElementById('ed-cat').value;
+    l.detail=document.getElementById('ed-detail').value;
     l.memo=document.getElementById('ed-memo').value;
   } else {
     l.date=document.getElementById('ed-date').value;
@@ -998,6 +1009,7 @@ function saveEdit(){
     l.amt=parseInt(document.getElementById('ed-amt').value)||0;
     l.pay=document.getElementById('ed-pay').value;
     l.plc=document.getElementById('ed-plc').value;
+    l.detail=document.getElementById('ed-detail').value;
     l.memo=document.getElementById('ed-memo').value;
     l.seisan=document.getElementById('ed-seisan').checked;
   }
@@ -1025,7 +1037,7 @@ function exportCSV(){
   if(!t){toast('出張・旅を選択してください');return}
   const logs=curLogs();
   const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
-  const header='管理番号,出張名,日付,時刻,種別,カテゴリ,場所,金額,支払方法,精算対象,メモ';
+  const header='管理番号,出張名,日付,時刻,種別,カテゴリ,場所,詳細,金額,支払方法,精算対象,メモ';
   const rows=logs.map(l=>{
     const date=l.date||'';
     const time=fmtT(l.hhmm)||'';
@@ -1033,9 +1045,9 @@ function exportCSV(){
     const name=t.name||'';
     const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
     if(l.type==='action'){
-      return[esc(no),esc(name),date,time,EV_LABEL[l.ev]||l.ev,l.cat||'',esc(l.place||''),'','','',esc(l.memo||'')].join(',');
+      return[esc(no),esc(name),date,time,EV_LABEL[l.ev]||l.ev,l.cat||'',esc(l.place||''),esc(l.detail||''),'','','',esc(l.memo||'')].join(',');
     } else {
-      return[esc(no),esc(name),date,time,'支出',l.cn||'',esc(l.plc||''),l.amt||0,l.pay||'',l.seisan?'精算':'個人',esc(l.memo||'')].join(',');
+      return[esc(no),esc(name),date,time,'支出',l.cn||'',esc(l.plc||''),esc(l.detail||''),l.amt||0,l.pay||'',l.seisan?'精算':'個人',esc(l.memo||'')].join(',');
     }
   });
   const bom='\uFEFF'; // Excel文字化け防止
@@ -1218,17 +1230,18 @@ function parseAndImportCSV(text){
 
     // 列位置を判定（管理番号・出張名ありの場合は列をずらす）
     let offset=0;
-    if(cols.length>=11){offset=2} // 管理番号・出張名あり
+    if(cols.length>=12){offset=2} // 管理番号・出張名あり
 
     const dateRaw=(cols[offset+0]||'').trim().replace(/\//g,'-');
     const hhmmRaw=(cols[offset+1]||'').trim().replace(/:/g,'').padStart(4,'0');
     const kindRaw=(cols[offset+2]||'').trim();
     const catRaw =(cols[offset+3]||'').trim();
     const place  =(cols[offset+4]||'').trim();
-    const amtRaw =(cols[offset+5]||'').trim().replace(/[^\d]/g,'');
-    const pay    =(cols[offset+6]||'').trim();
-    const seisanRaw=(cols[offset+7]||'').trim();
-    const memo   =(cols[offset+8]||'').trim();
+    const detailRaw=(cols[offset+5]||'').trim();
+    const amtRaw =(cols[offset+6]||'').trim().replace(/[^\d]/g,'');
+    const pay    =(cols[offset+7]||'').trim();
+    const seisanRaw=(cols[offset+8]||'').trim();
+    const memo   =(cols[offset+9]||'').trim();
 
     if(!dateRaw||!kindRaw)continue;
 
@@ -1246,7 +1259,7 @@ function parseAndImportCSV(text){
         cont:contId,ce:contE.e,cn:contE.n,
         amt:parseInt(amtRaw)||0,
         pay:pay||'現金',
-        plc:place,memo,
+        plc:place,detail:detailRaw,memo,
         seisan:seisanRaw==='精算'||seisanRaw==='○'||seisanRaw==='true',
         ts:Date.now()
       });
@@ -1259,7 +1272,7 @@ function parseAndImportCSV(text){
         date,hhmm,ev,
         cat:catRaw||'移動',
         place:place||'場所未設定',
-        memo,lat:null,lng:null,ts:Date.now()
+        detail:detailRaw,memo,lat:null,lng:null,ts:Date.now()
       });
       cnt++;
     }
