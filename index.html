@@ -458,16 +458,6 @@ input:checked+.slider::before{transform:translateX(20px)}
           <input type="file" id="csv-import-input" accept=".csv,.txt" style="display:none" onchange="importCSV(this)">
         </div>
         <div class="settings-card">
-          <h3>🔗 スプレッドシートのURLから読み込む</h3>
-          <p>GoogleスプレッドシートをCSVとして公開し、そのURLを入力すると直接読み込めます。PCで事前入力したデータをスマホに取り込む場合に便利です。</p>
-          <div class="fld" style="margin-bottom:10px">
-            <label>公開URL（CSV形式）</label>
-            <input type="url" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." style="font-size:12px">
-          </div>
-          <button class="btnp" onclick="importFromURL()">URLから読み込む</button>
-          <div id="url-status" style="font-size:12px;color:var(--ink3);margin-top:8px;text-align:center"></div>
-        </div>
-        <div class="settings-card">
           <h3>🗑 削除</h3>
           <p>現在選択中の出張・旅のデータをすべて削除します。取り消せません。</p>
           <button class="btn-red" onclick="deleteCurrentTrip()">現在の出張・旅を削除</button>
@@ -1174,31 +1164,6 @@ function importCSV(inp){
   r.onload=e=>parseAndImportCSV(e.target.result);
   r.readAsText(file,'UTF-8');
   inp.value='';
-}
-function importFromURL(){
-  if(!S.curId){toast('まず出張・旅を選んでください');return}
-  const url=document.getElementById('sheet-url').value.trim();
-  if(!url){toast('URLを入力してください');return}
-  document.getElementById('url-status').textContent='読み込み中…';
-  // GoogleスプレッドシートのURLをCSVエクスポートURLに変換
-  let fetchUrl=url;
-  const m=url.match(/\/spreadsheets\/d\/([^/]+)/);
-  if(m){
-    const gid=url.match(/gid=(\d+)/);
-    fetchUrl=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gid?'&gid='+gid[1]:''}`;
-  }
-  fetch(fetchUrl)
-    .then(r=>{
-      if(!r.ok)throw new Error('取得失敗');
-      return r.text();
-    })
-    .then(csv=>{
-      const cnt=parseAndImportCSV(csv);
-      document.getElementById('url-status').textContent='';
-    })
-    .catch(err=>{
-      document.getElementById('url-status').textContent='⚠️ 読み込みに失敗しました。URLとシートの公開設定を確認してください。';
-    });
 }
 function parseAndImportCSV(text){
   if(!S.curId){toast('まず出張・旅を選んでください');return 0}
