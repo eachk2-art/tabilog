@@ -376,8 +376,13 @@ input:checked+.slider::before{transform:translateX(20px)}
     <!-- EXPENSE -->
     <div class="page" id="page-expense">
       <div class="form-card">
-        <h2>💴 支出を記録</h2>
-        <div class="toggle-row">
+        <h2 id="exp-form-title">💴 支出を記録</h2>
+        <!-- 収入/支出切り替え -->
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="ev-btn sel-arrive" id="exp-type-out" onclick="setExpKind('out')" style="flex:1;padding:10px"><span class="ev-icon">💴</span>支出</button>
+          <button class="ev-btn" id="exp-type-in" onclick="setExpKind('in')" style="flex:1;padding:10px"><span class="ev-icon">💰</span>収入</button>
+        </div>
+        <div class="toggle-row" id="seisan-row">
           <div><div class="lbl">精算対象</div><div class="sub">出張費精算書に含める</div></div>
           <label class="toggle"><input type="checkbox" id="exp-seisan" checked><span class="slider"></span></label>
         </div>
@@ -391,7 +396,7 @@ input:checked+.slider::before{transform:translateX(20px)}
         <div class="fld"><label>金額（円）<span class="req">必須</span></label><input type="number" id="exp-amt" placeholder="0" inputmode="numeric" oninput="checkExpValid()"></div>
         <div class="fld"><label>支払方法</label><div class="paypills" id="paypills"></div></div>
         <div class="fld"><label>場所・店名</label><input type="text" id="exp-plc" placeholder="例：仙台駅、東横INN豊橋駅東口"></div>
-        <div class="fld"><label>詳細（任意）</label><input type="text" id="exp-detail" placeholder="例：仙台→東京、シングル1泊…"></div>
+        <div class="fld"><label>詳細（任意）</label><input type="text" id="exp-detail" placeholder="例：仙台→東京、仮払い…"></div>
         <div class="fld"><label>メモ</label><input type="text" id="exp-memo" placeholder="例：中部飼料 鈴木所長へ…"></div>
         <button class="btnp" id="btn-expense" onclick="saveExpense()" disabled>追加する</button>
       </div>
@@ -403,10 +408,10 @@ input:checked+.slider::before{transform:translateX(20px)}
         <div class="lt-no" id="lt-no">—</div>
         <div class="lt-name" id="lt-name">出張・旅を選択してください</div>
         <div class="lt-stats">
-          <div class="ls"><div class="ll">全支出</div><div class="lv red" id="lt-tot">¥0</div></div>
+          <div class="ls"><div class="ll">支出合計</div><div class="lv red" id="lt-tot">¥0</div></div>
+          <div class="ls"><div class="ll">収入合計</div><div class="lv" style="color:var(--green)" id="lt-income">¥0</div></div>
           <div class="ls"><div class="ll">精算対象</div><div class="lv blue" id="lt-seisan">¥0</div></div>
-          <div class="ls"><div class="ll">個人負担</div><div class="lv" id="lt-kojin">¥0</div></div>
-          <div class="ls"><div class="ll">件数</div><div class="lv" id="lt-cnt">0件</div></div>
+          <div class="ls"><div class="ll">収支</div><div class="lv" id="lt-balance">¥0</div></div>
         </div>
       </div>
       <div class="sec">内容別集計</div>
@@ -570,7 +575,7 @@ const CAT_ICON={
 };
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
-let selCont='shinkansen', selPay='現金';
+let selCont='shinkansen', selPay='現金', expKind='out';
 let lat=null, lng=null;
 let selEv_='depart', editingId=null;
 
@@ -613,7 +618,7 @@ function swPage(n,btn){
   if(n==='log')refreshLog();
   if(n==='settings')refreshStorage();
   if(n==='action'){document.getElementById('ac-date').value=today();document.getElementById('ac-hhmm').value=nowHHMM();checkActionValid();}
-  if(n==='expense'){document.getElementById('exp-date').value=today();document.getElementById('exp-hhmm').value=nowHHMM();checkExpValid();}
+  if(n==='expense'){document.getElementById('exp-date').value=today();document.getElementById('exp-hhmm').value=nowHHMM();setExpKind('out');checkExpValid();}
 }
 
 // ══ Event type selection ══
@@ -701,6 +706,14 @@ function renderPaypills(){
   ).join('');
 }
 function selP(p){selPay=p;renderPaypills()}
+function setExpKind(kind){
+  expKind=kind;
+  document.getElementById('exp-type-out').className='ev-btn'+(kind==='out'?' sel-arrive':'');
+  document.getElementById('exp-type-in').className='ev-btn'+(kind==='in'?' sel-start':'');
+  document.getElementById('exp-form-title').textContent=kind==='in'?'💰 収入を記録':'💴 支出を記録';
+  // 収入のとき精算対象は非表示
+  document.getElementById('seisan-row').style.display=kind==='in'?'none':'flex';
+}
 function saveExpense(){
   if(!S.curId){toast('まず出張・旅を選んでください');swPage('home',document.querySelector('.nb'));return}
   const amt=parseInt(document.getElementById('exp-amt').value)||0;
@@ -708,6 +721,7 @@ function saveExpense(){
   const cont=CONTENTS.find(c=>c.id===selCont);
   S.logs.push({
     id:uid(),tid:S.curId,type:'exp',
+    kind:expKind,
     date:document.getElementById('exp-date').value,
     hhmm:document.getElementById('exp-hhmm').value.replace(/\D/g,'').padStart(4,'0'),
     cont:selCont,ce:cont.e,cn:cont.n,
@@ -715,7 +729,7 @@ function saveExpense(){
     plc:document.getElementById('exp-plc').value,
     detail:document.getElementById('exp-detail').value,
     memo:document.getElementById('exp-memo').value,
-    seisan:document.getElementById('exp-seisan').checked,
+    seisan:expKind==='in'?false:document.getElementById('exp-seisan').checked,
     ts:Date.now()
   });
   sv();
@@ -818,12 +832,18 @@ function refreshLog(){
   document.getElementById('lt-name').textContent=t?t.name:'出張・旅を選択してください';
   const logs=curLogs();
   const exps=logs.filter(l=>l.type==='exp');
-  const tot=exps.reduce((s,l)=>s+l.amt,0);
-  const seisan=exps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+  const outLogs=exps.filter(l=>l.kind!=='in');
+  const inLogs=exps.filter(l=>l.kind==='in');
+  const tot=outLogs.reduce((s,l)=>s+l.amt,0);
+  const income=inLogs.reduce((s,l)=>s+l.amt,0);
+  const seisan=outLogs.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+  const balance=income-tot;
   document.getElementById('lt-tot').textContent='¥'+tot.toLocaleString();
+  document.getElementById('lt-income').textContent='¥'+income.toLocaleString();
   document.getElementById('lt-seisan').textContent='¥'+seisan.toLocaleString();
-  document.getElementById('lt-kojin').textContent='¥'+(tot-seisan).toLocaleString();
-  document.getElementById('lt-cnt').textContent=logs.length+'件';
+  const balEl=document.getElementById('lt-balance');
+  balEl.textContent=(balance>=0?'+':'')+'¥'+balance.toLocaleString();
+  balEl.style.color=balance>=0?'var(--green)':'var(--red)';
 
   // bar chart
   document.getElementById('barchart').innerHTML=CONTENTS.map((c,i)=>{
@@ -909,10 +929,15 @@ function renderLogRow(l, isLast){
       </div>
     </div>`;
   } else {
-    // expense
-    const dotCls=l.seisan?'dot-exp-seisan':'dot-exp-kojin';
-    const stag=l.seisan?`<span class="tag tag-ok">精算</span>`:`<span class="tag tag-ng">個人</span>`;
+    // expense or income
+    const isIncome=l.kind==='in';
+    const dotCls=isIncome?'dot-arrive':(l.seisan?'dot-exp-seisan':'dot-exp-kojin');
+    const stag=isIncome
+      ?`<span class="tag tag-ok">収入</span>`
+      :(l.seisan?`<span class="tag tag-ok">精算</span>`:`<span class="tag tag-ng">個人</span>`);
     const ptag=l.pay?`<span class="tag tag-pay">${l.pay}</span>`:'';
+    const amtColor=isIncome?'var(--green)':'var(--red)';
+    const amtPrefix=isIncome?'+':'';
     return`<div class="tl-row exp-row">
       <div class="tl-left">
         <div class="tl-dot ${dotCls}"></div>
@@ -921,9 +946,9 @@ function renderLogRow(l, isLast){
       <div class="tl-body">
         <div class="tl-exp-main">
           <span class="tl-time">${time}</span>
-          <span class="tl-cat-icon">${l.ce||'💴'}</span>
+          <span class="tl-cat-icon">${isIncome?'💰':(l.ce||'💴')}</span>
           <span class="tl-exp-name">${l.cn||''}</span>
-          <span class="tl-exp-amt">¥${(l.amt||0).toLocaleString()}</span>
+          <span class="tl-exp-amt" style="color:${amtColor}">${amtPrefix}¥${(l.amt||0).toLocaleString()}</span>
           ${stag}${ptag}
         </div>
         <div class="tl-sub">${l.plc||''}</div>
