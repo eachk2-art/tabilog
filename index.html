@@ -568,6 +568,12 @@ const CONTENTS=[
   // 収入専用
   {id:'advance',    e:'💴', n:'仮払い'},
   {id:'gift',       e:'🎀', n:'餞別'},
+  {id:'cash_hold',  e:'💵', n:'現金手持ち'},
+  {id:'suica_bal',  e:'🚃', n:'Suica残高'},
+  {id:'nanaco_bal', e:'🟡', n:'ナナコ残高'},
+  {id:'emoney_bal', e:'💳', n:'電子マネー残高'},
+  {id:'suica_chg',  e:'⚡', n:'Suicaチャージ'},
+  {id:'nanaco_chg', e:'⚡', n:'ナナコチャージ'},
   {id:'other',      e:'📋', n:'その他'},
 ];
 const PAYS=['現金','カード','Suica','ナナコ','ETC','電子マネー'];
@@ -1241,7 +1247,10 @@ function parseAndImportCSV(text){
     '駐車場':'parking','宿泊':'hotel','飲食':'meal','飲料':'drink',
     'コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain','買い物':'shopping',
     '土産':'souvenir','備品':'supplies','会議費':'meeting','日当':'allowance',
-    '仮払い':'advance','餞別':'gift','その他':'other',
+    '仮払い':'advance','餞別':'gift',
+    '現金手持ち':'cash_hold','Suica残高':'suica_bal','ナナコ残高':'nanaco_bal',
+    '電子マネー残高':'emoney_bal','Suicaチャージ':'suica_chg','ナナコチャージ':'nanaco_chg',
+    'その他':'other',
     // 旧名称の互換
     '食事':'meal','買物':'shopping',
   };
