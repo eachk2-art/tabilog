@@ -342,7 +342,8 @@ input:checked+.slider::before{transform:translateX(20px)}
           <label>カテゴリ</label>
           <select id="ac-cat">
             <option value="移動">🚗 移動</option>
-            <option value="行動">🚶 行動</option>
+            <option value="徒歩">🚶 徒歩</option>
+            <option value="行動">🏃 行動</option>
             <option value="作業">💻 作業</option>
             <option value="日常">🏠 日常</option>
             <option value="新幹線">🚄 新幹線</option>
@@ -416,6 +417,8 @@ input:checked+.slider::before{transform:translateX(20px)}
       </div>
       <div class="sec">内容別集計</div>
       <div class="bsec" id="barchart"></div>
+      <div class="sec">支払方法別集計</div>
+      <div class="bsec" id="paychart"></div>
       <div class="sec">時系列ログ</div>
       <div class="tl-wrap" id="tl-wrap"></div>
     </div>
@@ -559,19 +562,24 @@ const CONTENTS=[
   {id:'supplies',   e:'📦', n:'備品'},
   {id:'meeting',    e:'🤝', n:'会議費'},
   {id:'allowance',  e:'💰', n:'日当'},
+  // 収入専用
+  {id:'advance',    e:'💴', n:'仮払い'},
+  {id:'gift',       e:'🎀', n:'餞別'},
   {id:'other',      e:'📋', n:'その他'},
 ];
-const PAYS=['現金','カード','Suica','ETC','電子マネー'];
+const PAYS=['現金','カード','Suica','ナナコ','ETC','電子マネー'];
 const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457','#00838f','#4527a0'];
 const CAT_ICON={
   // 共通
-  移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
+  移動:'🚗',徒歩:'🚶',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
   宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
   // 行動のみ
-  行動:'🚶',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
+  行動:'🏃',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
   // 支出のみ
   高速:'🛣️',ガソリン:'⛽',駐車場:'🅿️',飲料:'☕',コンビニ:'🏪',
   自販機:'🥤',土産:'🎁',備品:'📦',会議費:'🤝',日当:'💰',
+  // 収入専用
+  仮払い:'💴',餞別:'🎀',
 };
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
@@ -845,12 +853,33 @@ function refreshLog(){
   balEl.textContent=(balance>=0?'+':'')+'¥'+balance.toLocaleString();
   balEl.style.color=balance>=0?'var(--green)':'var(--red)';
 
-  // bar chart
+  // 内容別bar chart（支出のみ）
   document.getElementById('barchart').innerHTML=CONTENTS.map((c,i)=>{
-    const sum=exps.filter(l=>l.cont===c.id).reduce((s,l)=>s+l.amt,0);
+    const sum=outLogs.filter(l=>l.cont===c.id).reduce((s,l)=>s+l.amt,0);
     if(!sum)return'';
     const pct=Math.round(sum/tot*100);
     return`<div class="bitem"><div class="blbl"><span>${c.e} ${c.n}</span><span style="font-family:var(--mono)">¥${sum.toLocaleString()} (${pct}%)</span></div><div class="btrk"><div class="bfil" style="width:${pct}%;background:${BCOLS[i%BCOLS.length]}"></div></div></div>`;
+  }).join('');
+
+  // 支払方法別集計
+  const PAY_COLS={'現金':'#b84f00','カード':'#003fa0','Suica':'#0a5e22','ナナコ':'#ad1457','ETC':'#7a5200','電子マネー':'#7c4dff'};
+  document.getElementById('paychart').innerHTML=PAYS.map(p=>{
+    const outSum=outLogs.filter(l=>l.pay===p).reduce((s,l)=>s+l.amt,0);
+    const inSum=inLogs.filter(l=>l.pay===p).reduce((s,l)=>s+l.amt,0);
+    if(!outSum&&!inSum)return'';
+    const col=PAY_COLS[p]||'#546e7a';
+    const maxAmt=Math.max(tot,income)||1;
+    const pct=Math.round(outSum/maxAmt*100);
+    return`<div class="bitem">
+      <div class="blbl">
+        <span>${p}</span>
+        <span style="font-family:var(--mono)">
+          ${outSum?`<span style="color:var(--red)">−¥${outSum.toLocaleString()}</span>`:''}
+          ${inSum?`<span style="color:var(--green);margin-left:6px">+¥${inSum.toLocaleString()}</span>`:''}
+        </span>
+      </div>
+      <div class="btrk"><div class="bfil" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
   }).join('');
 
   // timeline grouped by date
@@ -1204,11 +1233,12 @@ function parseAndImportCSV(text){
 
   const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end'};
   const CONT_MAP={
-    '移動':'transport','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
+    '移動':'transport','徒歩':'walk','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
     'バス':'bus','タクシー':'taxi','飛行機':'airplane','ガソリン':'gasoline',
     '駐車場':'parking','宿泊':'hotel','飲食':'meal','飲料':'drink',
     'コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain','買い物':'shopping',
-    '土産':'souvenir','備品':'supplies','会議費':'meeting','日当':'allowance','その他':'other',
+    '土産':'souvenir','備品':'supplies','会議費':'meeting','日当':'allowance',
+    '仮払い':'advance','餞別':'gift','その他':'other',
     // 旧名称の互換
     '食事':'meal','買物':'shopping',
   };
