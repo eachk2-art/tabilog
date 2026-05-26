@@ -213,7 +213,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 .bfil{height:100%;border-radius:3px;transition:width .5s ease}
 
 /* Timeline container */
-.tl-wrap{margin:0 12px 32px;position:relative}
+.tl-wrap{margin:8px 12px 32px;position:relative}
 .date-group{margin-bottom:12px}
 /* 日付ラベル強化 */
 .date-label{
@@ -944,8 +944,9 @@ function refreshLog(){
     }
     // 日付ごとの支出集計
     const dayExps=items.filter(l=>l.type==='exp');
-    const dayTot=dayExps.reduce((s,l)=>s+l.amt,0);
-    const daySeisan=dayExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+    const dayOutExps=dayExps.filter(l=>l.kind!=='in');
+    const dayTot=dayOutExps.reduce((s,l)=>s+l.amt,0);
+    const daySeisan=dayOutExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
     const expHtml=dayTot>0?`<div class="dl-exp">¥${dayTot.toLocaleString()}</div><div class="dl-seisan">精算 ¥${daySeisan.toLocaleString()}</div>`:'';
 
     const dgId='dg-'+d.replace(/-/g,'');
