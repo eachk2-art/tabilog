@@ -992,11 +992,11 @@ function renderLogRow(l, isLast){
           <span class="tl-ev">${evLabel}</span>
           <span class="tl-cat-icon">${icon}</span>
           <span class="tl-place">${l.place}</span>
-          ${hasDetail?`<span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">▶</span>`:''}
+          <span style="font-size:11px;color:var(--ink3);margin-left:4px">${l.cat}</span>
+          <span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">${hasDetail?'▶':''}</span>
         </div>
-        <div class="tl-sub">${l.cat}</div>
         <div class="log-detail closed" id="${lid}">
-          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
+          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500;margin-top:4px">📝 ${l.detail}</div>`:''}
           ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
           ${mp}
           ${actions}
@@ -1004,13 +1004,12 @@ function renderLogRow(l, isLast){
       </div>
     </div>`;
   } else {
-    // expense or income
     const isIncome=l.kind==='in';
     const dotCls=isIncome?'dot-arrive':(l.seisan?'dot-exp-seisan':'dot-exp-kojin');
     const stag=isIncome
       ?`<span class="tag tag-ok">収入</span>`
       :(l.seisan?`<span class="tag tag-ok">精算</span>`:`<span class="tag tag-ng">個人</span>`);
-    const ptag=l.pay?`<span class="tag tag-pay">${l.pay}</span>`:'';
+    const ptag=l.pay?`<span class="tag tag-pay" style="font-size:10px;padding:1px 5px">${l.pay}</span>`:'';
     const amtColor=isIncome?'var(--green)':'var(--red)';
     const amtPrefix=isIncome?'+':'';
     const hasDetail=!!(l.detail||l.memo||l.plc);
@@ -1026,11 +1025,11 @@ function renderLogRow(l, isLast){
           <span class="tl-exp-name">${l.cn||''}</span>
           <span class="tl-exp-amt" style="color:${amtColor}">${amtPrefix}¥${(l.amt||0).toLocaleString()}</span>
           ${stag}${ptag}
-          ${hasDetail?`<span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">▶</span>`:''}
+          <span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">${hasDetail?'▶':''}</span>
         </div>
         <div class="log-detail closed" id="${lid}">
-          <div class="tl-sub">${l.plc||''}</div>
-          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
+          ${l.plc?`<div class="tl-sub" style="margin-top:3px">${l.plc}</div>`:''}
+          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500;margin-top:3px">📝 ${l.detail}</div>`:''}
           ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
           ${actions}
         </div>
