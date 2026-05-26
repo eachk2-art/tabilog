@@ -292,7 +292,19 @@ input:checked+.slider::before{transform:translateX(20px)}
 .settings-card h3{font-size:14px;font-weight:700;margin-bottom:6px}
 .settings-card p{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:10px}
 
-/* Toast */
+/* Accordion */
+.acc-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:1px;text-transform:uppercase;user-select:none}
+.acc-header:active{background:var(--border)}
+.acc-arrow{font-size:11px;transition:transform .2s;color:var(--ink3)}
+.acc-arrow.closed{transform:rotate(-90deg)}
+.acc-body{overflow:hidden;transition:max-height .25s ease}
+.acc-body.closed{max-height:0!important}
+/* Date group accordion */
+.dg-body{overflow:hidden;transition:max-height .4s ease;max-height:9999px}
+.dg-body.closed{max-height:0}
+/* Log detail accordion */
+.log-detail{overflow:hidden;transition:max-height .3s ease;max-height:9999px}
+.log-detail.closed{max-height:0}
 #toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--ink);color:white;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;z-index:999;transition:transform .25s;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -418,12 +430,27 @@ input:checked+.slider::before{transform:translateX(20px)}
           <div class="ls"><div class="ll">収支</div><div class="lv" id="lt-balance">¥0</div></div>
         </div>
       </div>
-      <div class="sec">内容別集計</div>
-      <div class="bsec" id="barchart"></div>
-      <div class="sec">支払方法別集計</div>
-      <div class="bsec" id="paychart"></div>
-      <div class="sec">時系列ログ</div>
-      <div class="tl-wrap" id="tl-wrap"></div>
+      <!-- 内容別集計 折りたたみ -->
+      <div class="acc-header" onclick="toggleAcc('acc-contents')">
+        <span>内容別集計</span><span class="acc-arrow" id="arr-acc-contents">▼</span>
+      </div>
+      <div class="acc-body" id="acc-contents">
+        <div class="bsec" id="barchart"></div>
+      </div>
+      <!-- 支払方法別集計 折りたたみ -->
+      <div class="acc-header" onclick="toggleAcc('acc-pays')">
+        <span>支払方法別集計</span><span class="acc-arrow" id="arr-acc-pays">▼</span>
+      </div>
+      <div class="acc-body" id="acc-pays">
+        <div class="bsec" id="paychart"></div>
+      </div>
+      <!-- 時系列ログ -->
+      <div class="acc-header" onclick="toggleAcc('acc-logs')">
+        <span>時系列ログ</span><span class="acc-arrow" id="arr-acc-logs">▼</span>
+      </div>
+      <div class="acc-body" id="acc-logs">
+        <div class="tl-wrap" id="tl-wrap"></div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
@@ -918,25 +945,31 @@ function refreshLog(){
     const daySeisan=dayExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
     const expHtml=dayTot>0?`<div class="dl-exp">¥${dayTot.toLocaleString()}</div><div class="dl-seisan">精算 ¥${daySeisan.toLocaleString()}</div>`:'';
 
+    const dgId='dg-'+d.replace(/-/g,'');
     html+=`<div class="date-group">
-      <div class="date-label">
+      <div class="date-label" onclick="toggleDateGroup('${dgId}')">
         <div class="dl-left">
           <span class="dl-date">${dlabel}</span>${dow}
           <span class="dl-cnt">${cnt}件</span>
         </div>
-        <div class="dl-right">${expHtml}</div>
-      </div>`;
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="dl-right">${expHtml}</div>
+          <span class="acc-arrow" id="arr-${dgId}" style="color:#aaa;font-size:12px">▼</span>
+        </div>
+      </div>
+      <div class="dg-body" id="${dgId}">`;
     items.forEach((l,idx)=>{
       const isLast=idx===items.length-1&&Object.keys(byDate).sort().pop()===d;
       html+=renderLogRow(l,isLast);
     });
-    html+='</div>';
+    html+='</div></div>';
   });
   document.getElementById('tl-wrap').innerHTML=html;
 }
 
 function renderLogRow(l, isLast){
   const time=fmtT(l.hhmm);
+  const lid='ld-'+l.id;
   const actions=`<div class="tl-actions">
     <button class="act-btn" onclick="openEdit('${l.id}')">✏️ 編集</button>
     <button class="act-btn" onclick="delLog('${l.id}')">🗑 削除</button>
@@ -947,23 +980,27 @@ function renderLogRow(l, isLast){
     const evLabel=EV_LABEL[l.ev]||l.ev;
     const icon=CAT_ICON[l.cat]||'📌';
     const mp=l.lat?`<a href="https://maps.google.com?q=${l.lat},${l.lng}" target="_blank" style="color:var(--blue);font-size:11px;font-weight:700;display:inline-block;margin-top:3px">🗺️ 地図</a>`:'';
+    const hasDetail=!!(l.detail||l.memo||l.lat);
     return`<div class="tl-row ev-${l.ev}">
       <div class="tl-left">
         <div class="tl-dot ${dotCls}"></div>
         ${!isLast?'<div class="tl-line"></div>':''}
       </div>
       <div class="tl-body">
-        <div class="tl-main">
+        <div class="tl-main" onclick="toggleDetail('${lid}')" style="cursor:pointer">
           <span class="tl-time">${time}</span>
           <span class="tl-ev">${evLabel}</span>
           <span class="tl-cat-icon">${icon}</span>
           <span class="tl-place">${l.place}</span>
+          ${hasDetail?`<span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">▶</span>`:''}
         </div>
         <div class="tl-sub">${l.cat}</div>
-        ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
-        ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
-        ${mp}
-        ${actions}
+        <div class="log-detail closed" id="${lid}">
+          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
+          ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
+          ${mp}
+          ${actions}
+        </div>
       </div>
     </div>`;
   } else {
@@ -976,23 +1013,27 @@ function renderLogRow(l, isLast){
     const ptag=l.pay?`<span class="tag tag-pay">${l.pay}</span>`:'';
     const amtColor=isIncome?'var(--green)':'var(--red)';
     const amtPrefix=isIncome?'+':'';
+    const hasDetail=!!(l.detail||l.memo||l.plc);
     return`<div class="tl-row exp-row">
       <div class="tl-left">
         <div class="tl-dot ${dotCls}"></div>
         ${!isLast?'<div class="tl-line"></div>':''}
       </div>
       <div class="tl-body">
-        <div class="tl-exp-main">
+        <div class="tl-exp-main" onclick="toggleDetail('${lid}')" style="cursor:pointer">
           <span class="tl-time">${time}</span>
           <span class="tl-cat-icon">${isIncome?'💰':(l.ce||'💴')}</span>
           <span class="tl-exp-name">${l.cn||''}</span>
           <span class="tl-exp-amt" style="color:${amtColor}">${amtPrefix}¥${(l.amt||0).toLocaleString()}</span>
           ${stag}${ptag}
+          ${hasDetail?`<span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">▶</span>`:''}
         </div>
-        <div class="tl-sub">${l.plc||''}</div>
-        ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
-        ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
-        ${actions}
+        <div class="log-detail closed" id="${lid}">
+          <div class="tl-sub">${l.plc||''}</div>
+          ${l.detail?`<div class="tl-memo" style="color:var(--ink);font-weight:500">📝 ${l.detail}</div>`:''}
+          ${l.memo?`<div class="tl-memo">${l.memo}</div>`:''}
+          ${actions}
+        </div>
       </div>
     </div>`;
   }
@@ -1328,6 +1369,29 @@ function parseCSVLine(line){
   }
   result.push(cur);
   return result.map(s=>s.trim());
+}
+
+// ══ Accordion ══
+function toggleAcc(id){
+  const body=document.getElementById(id);
+  const arr=document.getElementById('arr-'+id);
+  if(!body)return;
+  const closed=body.classList.toggle('closed');
+  if(arr)arr.textContent=closed?'▶':'▼';
+}
+function toggleDateGroup(id){
+  const body=document.getElementById(id);
+  const arr=document.getElementById('arr-'+id);
+  if(!body)return;
+  const closed=body.classList.toggle('closed');
+  if(arr)arr.textContent=closed?'▶':'▼';
+}
+function toggleDetail(id){
+  const body=document.getElementById(id);
+  const arr=document.getElementById('arr-'+id);
+  if(!body)return;
+  const closed=body.classList.toggle('closed');
+  if(arr)arr.textContent=closed?'▶':'▼';
 }
 
 // ══ Export / Import (JSON) ══
