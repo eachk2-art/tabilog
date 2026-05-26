@@ -231,22 +231,23 @@ input:checked+.slider::before{transform:translateX(20px)}
 
 /* Timeline row */
 .tl-row{display:flex;align-items:flex-start;gap:0;margin-bottom:0;position:relative}
-.tl-left{width:36px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
-.tl-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--surface);margin-top:14px;flex-shrink:0;z-index:1;position:relative}
+.tl-left{width:28px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.tl-dot{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;margin-top:10px;flex-shrink:0;z-index:1;font-size:14px;font-weight:900;font-family:var(--mono)}
 /* ライン色を種別ごとに */
-.tl-line{width:3px;flex:1;min-height:8px;background:var(--border);border-radius:2px}
+.tl-line{width:2px;flex:1;min-height:8px;background:var(--border);border-radius:2px}
 .tl-row.ev-depart .tl-line{background:rgba(191,26,0,0.3)}
 .tl-row.ev-arrive .tl-line{background:rgba(10,94,34,0.3)}
 .tl-row.ev-start  .tl-line{background:rgba(184,79,0,0.3)}
 .tl-row.ev-end    .tl-line{background:rgba(85,85,85,0.3)}
-.tl-row.exp-row   .tl-line{background:rgba(0,63,160,0.2)}
-/* dot colors */
-.dot-depart{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
-.dot-arrive{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
-.dot-start{background:var(--orange);box-shadow:0 0 0 3px var(--orange-bg)}
-.dot-end{background:var(--gray);box-shadow:0 0 0 3px var(--gray-bg)}
-.dot-exp-seisan{background:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
-.dot-exp-kojin{background:var(--border2);box-shadow:0 0 0 3px var(--surface2)}
+.tl-row.exp-row   .tl-line{background:rgba(0,63,160,0.15)}
+/* dot symbols */
+.dot-depart{background:var(--red-bg);color:var(--red)}
+.dot-arrive{background:var(--green-bg);color:var(--green)}
+.dot-start{background:var(--orange-bg);color:var(--orange)}
+.dot-end{background:var(--gray-bg);color:var(--gray)}
+.dot-exp-seisan{background:#fde0db;color:var(--red)}
+.dot-exp-kojin{background:var(--surface2);color:var(--red)}
+.dot-inc{background:var(--green-bg);color:var(--green)}
 
 .tl-body{flex:1;padding:8px 0 8px 10px}
 .tl-main{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
@@ -354,7 +355,7 @@ input:checked+.slider::before{transform:translateX(20px)}
         <div class="fld">
           <label>カテゴリ</label>
           <select id="ac-cat">
-            <option value="移動">🚗 移動</option>
+            <option value="クルマ">🚗 クルマ</option>
             <option value="徒歩">🚶 徒歩</option>
             <option value="行動">🏃 行動</option>
             <option value="作業">💻 作業</option>
@@ -432,23 +433,23 @@ input:checked+.slider::before{transform:translateX(20px)}
       </div>
       <!-- 内容別集計 折りたたみ -->
       <div class="acc-header" onclick="toggleAcc('acc-contents')">
-        <span>内容別集計</span><span class="acc-arrow" id="arr-acc-contents">▼</span>
+        <span>内容別集計</span><span class="acc-arrow closed" id="arr-acc-contents">▼</span>
       </div>
-      <div class="acc-body" id="acc-contents">
+      <div class="acc-body closed" id="acc-contents">
         <div class="bsec" id="barchart"></div>
       </div>
       <!-- 支払方法別集計 折りたたみ -->
       <div class="acc-header" onclick="toggleAcc('acc-pays')">
-        <span>支払方法別集計</span><span class="acc-arrow" id="arr-acc-pays">▼</span>
+        <span>支払方法別集計</span><span class="acc-arrow closed" id="arr-acc-pays">▼</span>
       </div>
-      <div class="acc-body" id="acc-pays">
+      <div class="acc-body closed" id="acc-pays">
         <div class="bsec" id="paychart"></div>
       </div>
       <!-- 時系列ログ -->
       <div class="acc-header" onclick="toggleAcc('acc-logs')">
-        <span>時系列ログ</span><span class="acc-arrow" id="arr-acc-logs">▼</span>
+        <span>時系列ログ</span><span class="acc-arrow closed" id="arr-acc-logs">▼</span>
       </div>
-      <div class="acc-body" id="acc-logs">
+      <div class="acc-body closed" id="acc-logs">
         <div class="tl-wrap" id="tl-wrap"></div>
       </div>
     </div>
@@ -607,7 +608,7 @@ const PAYS=['現金','カード','Suica','ナナコ','ETC','電子マネー'];
 const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457','#00838f','#4527a0'];
 const CAT_ICON={
   // 共通
-  移動:'🚗',徒歩:'🚶',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
+  クルマ:'🚗',徒歩:'🚶',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
   宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
   // 行動のみ
   行動:'🏃',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
@@ -616,6 +617,8 @@ const CAT_ICON={
   自販機:'🥤',土産:'🎁',備品:'📦',会議費:'🤝',日当:'💰',
   // 収入専用
   仮払い:'💴',餞別:'🎀',
+  // 旧名称互換
+  移動:'🚗',
 };
 const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
 
@@ -954,10 +957,10 @@ function refreshLog(){
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="dl-right">${expHtml}</div>
-          <span class="acc-arrow" id="arr-${dgId}" style="color:#aaa;font-size:12px">▼</span>
+          <span class="acc-arrow closed" id="arr-${dgId}" style="color:#aaa;font-size:12px">▼</span>
         </div>
       </div>
-      <div class="dg-body" id="${dgId}">`;
+      <div class="dg-body closed" id="${dgId}">`;
     items.forEach((l,idx)=>{
       const isLast=idx===items.length-1&&Object.keys(byDate).sort().pop()===d;
       html+=renderLogRow(l,isLast);
@@ -976,14 +979,16 @@ function renderLogRow(l, isLast){
   </div>`;
 
   if(l.type==='action'){
-    const dotCls='dot-'+l.ev;
+    const isOut=l.ev==='depart'||l.ev==='start';
+    const dotCls=isOut?'dot-'+l.ev:'dot-'+l.ev;
+    const dotSymbol=isOut?'→':'←';
     const evLabel=EV_LABEL[l.ev]||l.ev;
     const icon=CAT_ICON[l.cat]||'📌';
     const mp=l.lat?`<a href="https://maps.google.com?q=${l.lat},${l.lng}" target="_blank" style="color:var(--blue);font-size:11px;font-weight:700;display:inline-block;margin-top:3px">🗺️ 地図</a>`:'';
     const hasDetail=!!(l.detail||l.memo||l.lat);
     return`<div class="tl-row ev-${l.ev}">
       <div class="tl-left">
-        <div class="tl-dot ${dotCls}"></div>
+        <div class="tl-dot dot-${l.ev}">${dotSymbol}</div>
         ${!isLast?'<div class="tl-line"></div>':''}
       </div>
       <div class="tl-body">
@@ -1005,7 +1010,7 @@ function renderLogRow(l, isLast){
     </div>`;
   } else {
     const isIncome=l.kind==='in';
-    const dotCls=isIncome?'dot-arrive':(l.seisan?'dot-exp-seisan':'dot-exp-kojin');
+    const dotCls=isIncome?'dot-inc':(l.seisan?'dot-exp-seisan':'dot-exp-kojin');
     const stag=isIncome
       ?`<span class="tag tag-ok">収入</span>`
       :(l.seisan?`<span class="tag tag-ok">精算</span>`:`<span class="tag tag-ng">個人</span>`);
@@ -1015,7 +1020,7 @@ function renderLogRow(l, isLast){
     const hasDetail=!!(l.detail||l.memo||l.plc);
     return`<div class="tl-row exp-row">
       <div class="tl-left">
-        <div class="tl-dot ${dotCls}"></div>
+        <div class="tl-dot ${dotCls}">¥</div>
         ${!isLast?'<div class="tl-line"></div>':''}
       </div>
       <div class="tl-body">
@@ -1282,7 +1287,7 @@ function parseAndImportCSV(text){
 
   const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end'};
   const CONT_MAP={
-    '移動':'transport','徒歩':'walk','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
+    'クルマ':'transport','移動':'transport','徒歩':'walk','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
     'バス':'bus','タクシー':'taxi','飛行機':'airplane','ガソリン':'gasoline',
     '駐車場':'parking','宿泊':'hotel','飲食':'meal','飲料':'drink',
     'コンビニ':'conbini','自販機':'jidohanbaiki','娯楽':'entertain','買い物':'shopping',
@@ -1375,22 +1380,22 @@ function toggleAcc(id){
   const body=document.getElementById(id);
   const arr=document.getElementById('arr-'+id);
   if(!body)return;
-  const closed=body.classList.toggle('closed');
-  if(arr)arr.textContent=closed?'▶':'▼';
+  const isClosed=body.classList.toggle('closed');
+  if(arr){arr.classList.toggle('closed',isClosed);arr.textContent='▼';}
 }
 function toggleDateGroup(id){
   const body=document.getElementById(id);
   const arr=document.getElementById('arr-'+id);
   if(!body)return;
-  const closed=body.classList.toggle('closed');
-  if(arr)arr.textContent=closed?'▶':'▼';
+  const isClosed=body.classList.toggle('closed');
+  if(arr){arr.classList.toggle('closed',isClosed);arr.textContent='▼';}
 }
 function toggleDetail(id){
   const body=document.getElementById(id);
   const arr=document.getElementById('arr-'+id);
   if(!body)return;
-  const closed=body.classList.toggle('closed');
-  if(arr)arr.textContent=closed?'▶':'▼';
+  const isClosed=body.classList.toggle('closed');
+  if(arr){arr.textContent=isClosed?'▶':'▼';}
 }
 
 // ══ Export / Import (JSON) ══
