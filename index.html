@@ -901,21 +901,19 @@ function refreshLog(){
     return`<div class="bitem"><div class="blbl"><span>${c.e} ${c.n}</span><span style="font-family:var(--mono)">¥${sum.toLocaleString()} (${pct}%)</span></div><div class="btrk"><div class="bfil" style="width:${pct}%;background:${BCOLS[i%BCOLS.length]}"></div></div></div>`;
   }).join('');
 
-  // 支払方法別集計
+  // 支払方法別集計（支出のみ）
   const PAY_COLS={'現金':'#b84f00','カード':'#003fa0','Suica':'#0a5e22','ナナコ':'#ad1457','ETC':'#7a5200','電子マネー':'#7c4dff'};
   document.getElementById('paychart').innerHTML=PAYS.map(p=>{
     const outSum=outLogs.filter(l=>l.pay===p).reduce((s,l)=>s+l.amt,0);
-    const inSum=inLogs.filter(l=>l.pay===p).reduce((s,l)=>s+l.amt,0);
-    if(!outSum&&!inSum)return'';
+    if(!outSum)return'';
     const col=PAY_COLS[p]||'#546e7a';
-    const maxAmt=Math.max(tot,income)||1;
-    const pct=Math.round(outSum/maxAmt*100);
+    const pct=tot?Math.round(outSum/tot*100):0;
     return`<div class="bitem">
       <div class="blbl">
         <span>${p}</span>
         <span style="font-family:var(--mono)">
-          ${outSum?`<span style="color:var(--red)">−¥${outSum.toLocaleString()}</span>`:''}
-          ${inSum?`<span style="color:var(--green);margin-left:6px">+¥${inSum.toLocaleString()}</span>`:''}
+          <span style="color:var(--red)">−¥${outSum.toLocaleString()}</span>
+          <span style="color:var(--ink3);font-size:11px;margin-left:4px">(${pct}%)</span>
         </span>
       </div>
       <div class="btrk"><div class="bfil" style="width:${pct}%;background:${col}"></div></div>
