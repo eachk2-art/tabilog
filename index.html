@@ -797,8 +797,9 @@ function refreshHome(){
   if(S.trips.length){
     html=S.trips.map(t=>{
       const exps=S.logs.filter(l=>l.tid===t.id&&l.type==='exp');
-      const tot=exps.reduce((s,l)=>s+l.amt,0);
-      const seisan=exps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+      const outExps=exps.filter(l=>l.kind!=='in');
+      const tot=outExps.reduce((s,l)=>s+l.amt,0);
+      const seisan=outExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
       const cnt=S.logs.filter(l=>l.tid===t.id).length;
       const isCur=t.id===S.curId;
       return`<div class="trip-card ${isCur?'selected':''}" onclick="selectTrip('${t.id}')">
