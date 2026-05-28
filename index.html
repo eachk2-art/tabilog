@@ -1145,7 +1145,8 @@ function exportCSV(){
     if(l.type==='action'){
       return[esc(no),esc(name),date,time,EV_LABEL[l.ev]||l.ev,l.cat||'',esc(l.place||''),esc(l.detail||''),'','','',esc(l.memo||'')].join(',');
     } else {
-      return[esc(no),esc(name),date,time,'支出',l.cn||'',esc(l.plc||''),esc(l.detail||''),l.amt||0,l.pay||'',l.seisan?'精算':'個人',esc(l.memo||'')].join(',');
+      const kindLabel=l.kind==='in'?'収入':'支出';
+      return[esc(no),esc(name),date,time,kindLabel,l.cn||'',esc(l.plc||''),esc(l.detail||''),l.amt||0,l.pay||'',l.seisan?'精算':'個人',esc(l.memo||'')].join(',');
     }
   });
   const bom='\uFEFF'; // Excel文字化け防止
@@ -1203,15 +1204,20 @@ function exportHTML(){
           <td style="font-size:12px;color:#333;padding:7px 8px">${l.memo||''}</td>
         </tr>`;
       } else {
-        const stag=l.seisan?`<span style="background:#c8efd6;color:#0a5e22;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #a0d8b8">精算</span>`:`<span style="background:#e8e8e8;color:#555;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #aaa">個人</span>`;
+        const isIncome=l.kind==='in';
+        const amtColor=isIncome?'#0a5e22':'#bf1a00';
+        const amtPrefix=isIncome?'+':'';
+        const kindTag=isIncome
+          ?`<span style="background:#c8efd6;color:#0a5e22;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #a0d8b8">収入</span>`
+          :(l.seisan?`<span style="background:#c8efd6;color:#0a5e22;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #a0d8b8">精算</span>`:`<span style="background:#e8e8e8;color:#555;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #aaa">個人</span>`);
         const ptag=l.pay?`<span style="background:#d5e8ff;color:#003fa0;font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid #a0c8f0;margin-left:3px">${l.pay}</span>`:'';
-        rows+=`<tr style="background:#fafafa">
+        rows+=`<tr style="background:${isIncome?'#f0fff4':'#fafafa'}">
           <td style="font-family:monospace;font-size:14px;padding:7px 10px;white-space:nowrap;color:#555">${time}</td>
-          <td style="padding:7px 6px">${stag}${ptag}</td>
-          <td style="font-size:14px;padding:7px 4px">${l.ce||'💴'}</td>
-          <td style="font-size:14px;font-weight:700;padding:7px 8px;color:#bf1a00">¥${(l.amt||0).toLocaleString()}</td>
+          <td style="padding:7px 6px">${kindTag}${ptag}</td>
+          <td style="font-size:14px;padding:7px 4px">${isIncome?'💰':(l.ce||'💴')}</td>
+          <td style="font-size:14px;font-weight:700;padding:7px 8px;color:${amtColor}">${amtPrefix}¥${(l.amt||0).toLocaleString()}</td>
           <td style="font-size:13px;color:#555;padding:7px 8px">${l.cn||''}${l.plc?' · '+l.plc:''}</td>
-          <td style="font-size:12px;color:#333;padding:7px 8px">${l.memo||''}</td>
+          <td style="font-size:12px;color:#333;padding:7px 8px">${l.detail||''}${l.memo?' '+l.memo:''}</td>
         </tr>`;
       }
     });
