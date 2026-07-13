@@ -488,7 +488,7 @@ input:checked+.slider::before{transform:translateX(20px)}
           <h3>📥 インポート（復元）</h3>
           <p>エクスポートしたJSONファイルを読み込みます。既存データに追加されます（重複は除外）。</p>
           <button class="btnp" onclick="document.getElementById('import-input').click()">JSONファイルを読み込む</button>
-          <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
+          <input type="file" id="import-input" accept=".json,application/json,*/*" style="display:none" onchange="importData(this)">
         </div>
         <div class="settings-card">
           <h3>📋 CSVファイルから一括登録</h3>
@@ -499,7 +499,7 @@ input:checked+.slider::before{transform:translateX(20px)}
             2026/04/18,0721,出発,新幹線,仙台駅,11410,カード,精算,
           </div>
           <button class="btnp" onclick="document.getElementById('csv-import-input').click()">CSVファイルを読み込む</button>
-          <input type="file" id="csv-import-input" accept=".csv,.txt" style="display:none" onchange="importCSV(this)">
+          <input type="file" id="csv-import-input" accept=".csv,.txt,text/csv,text/plain,*/*" style="display:none" onchange="importCSV(this)">
         </div>
         <div class="settings-card">
           <h3>🗑 削除</h3>
