@@ -25,6 +25,7 @@
 .ev-arrive  { --ec:var(--green);  --eb:var(--green-bg);  }
 .ev-start   { --ec:var(--orange); --eb:var(--orange-bg); }
 .ev-end     { --ec:var(--gray);   --eb:var(--gray-bg);   }
+.ev-pass    { --ec:var(--blue);   --eb:var(--blue-bg);   }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;font-size:16px}
@@ -132,6 +133,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .ev-btn.sel-arrive{border-color:var(--green);background:var(--green-bg);color:var(--green)}
 .ev-btn.sel-start{border-color:var(--orange);background:var(--orange-bg);color:var(--orange)}
 .ev-btn.sel-end{border-color:var(--gray);background:var(--gray-bg);color:var(--gray)}
+.ev-btn.sel-pass{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
 .ev-btn:active{transform:scale(.95)}
 
 /* Place row */
@@ -245,6 +247,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 .dot-arrive{background:var(--green-bg);color:var(--green)}
 .dot-start{background:var(--orange-bg);color:var(--orange)}
 .dot-end{background:var(--gray-bg);color:var(--gray)}
+.dot-pass{background:var(--blue-bg);color:var(--blue)}
 .dot-exp-seisan{background:#fde0db;color:var(--red)}
 .dot-exp-kojin{background:var(--surface2);color:var(--red)}
 .dot-inc{background:var(--green-bg);color:var(--green)}
@@ -336,9 +339,10 @@ input:checked+.slider::before{transform:translateX(20px)}
         <!-- Event type buttons -->
         <div class="fld">
           <label>種別<span class="req">必須</span></label>
-          <div class="ev-btns">
+          <div class="ev-btns" style="grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
             <button class="ev-btn" id="evb-depart" onclick="selEv('depart')"><span class="ev-icon">🚗</span>出発</button>
             <button class="ev-btn" id="evb-arrive" onclick="selEv('arrive')"><span class="ev-icon">📍</span>到着</button>
+            <button class="ev-btn" id="evb-pass"   onclick="selEv('pass')"><span class="ev-icon">◎</span>通過</button>
             <button class="ev-btn" id="evb-start"  onclick="selEv('start')"><span class="ev-icon">▶️</span>開始</button>
             <button class="ev-btn" id="evb-end"    onclick="selEv('end')"><span class="ev-icon">⏹️</span>終了</button>
           </div>
@@ -359,6 +363,7 @@ input:checked+.slider::before{transform:translateX(20px)}
             <option value="徒歩">🚶 徒歩</option>
             <option value="行動">🏃 行動</option>
             <option value="作業">💻 作業</option>
+            <option value="待機">⏳ 待機</option>
             <option value="日常">🏠 日常</option>
             <option value="新幹線">🚄 新幹線</option>
             <option value="鉄道">🚃 鉄道</option>
@@ -611,7 +616,7 @@ const CAT_ICON={
   クルマ:'🚗',徒歩:'🚶',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
   宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
   // 行動のみ
-  行動:'🏃',作業:'💻',日常:'🏠',訪問先:'🏢',観光:'🌸',
+  行動:'🏃',作業:'💻',待機:'⏳',日常:'🏠',訪問先:'🏢',観光:'🌸',
   // 支出のみ
   高速:'🛣️',ガソリン:'⛽',駐車場:'🅿️',飲料:'☕',コンビニ:'🏪',
   自販機:'🥤',土産:'🎁',備品:'📦',会議費:'🤝',日当:'💰',
@@ -620,7 +625,7 @@ const CAT_ICON={
   // 旧名称互換
   移動:'🚗',
 };
-const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
+const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了',pass:'通過'};
 
 let selCont='shinkansen', selPay='現金', expKind='out';
 let lat=null, lng=null;
@@ -671,9 +676,9 @@ function swPage(n,btn){
 // ══ Event type selection ══
 function selEv(ev){
   selEv_=ev;
-  ['depart','arrive','start','end'].forEach(e=>{
+  ['depart','arrive','start','end','pass'].forEach(e=>{
     const b=document.getElementById('evb-'+e);
-    b.className='ev-btn'+(e===ev?' sel-'+e:'');
+    if(b)b.className='ev-btn'+(e===ev?' sel-'+e:'');
   });
   checkActionValid();
 }
@@ -980,8 +985,8 @@ function renderLogRow(l, isLast){
 
   if(l.type==='action'){
     const isOut=l.ev==='depart'||l.ev==='start';
-    const dotCls=isOut?'dot-'+l.ev:'dot-'+l.ev;
-    const dotSymbol=isOut?'→':'←';
+    const isPass=l.ev==='pass';
+    const dotSymbol=isPass?'◎':(isOut?'→':'←');
     const evLabel=EV_LABEL[l.ev]||l.ev;
     const icon=CAT_ICON[l.cat]||'📌';
     const mp=l.lat?`<a href="https://maps.google.com?q=${l.lat},${l.lng}" target="_blank" style="color:var(--blue);font-size:11px;font-weight:700;display:inline-block;margin-top:3px">🗺️ 地図</a>`:'';
@@ -1055,7 +1060,7 @@ function openEdit(id){
   document.getElementById('edit-title').textContent=l.type==='exp'?'✏️ 支出を編集':'✏️ 行動ログを編集';
   let html='';
   if(l.type==='action'){
-    const evOpts=['depart','arrive','start','end'].map(e=>`<option value="${e}" ${e===l.ev?'selected':''}>${EV_LABEL[e]}</option>`).join('');
+    const evOpts=['depart','arrive','pass','start','end'].map(e=>`<option value="${e}" ${e===l.ev?'selected':''}>${EV_LABEL[e]}</option>`).join('');
     const catOpts=Object.keys(CAT_ICON).map(c=>`<option value="${c}" ${c===l.cat?'selected':''}>${CAT_ICON[c]} ${c}</option>`).join('');
     html=`
       <div class="emf"><label>種別</label><select id="ed-ev">${evOpts}</select></div>
@@ -1134,7 +1139,7 @@ function exportCSV(){
   const t=curTrip();
   if(!t){toast('出張・旅を選択してください');return}
   const logs=curLogs();
-  const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
+  const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了',pass:'通過'};
   const header='管理番号,出張名,日付,時刻,種別,カテゴリ,場所,詳細,金額,支払方法,精算対象,メモ';
   const rows=logs.map(l=>{
     const date=l.date||'';
@@ -1174,8 +1179,8 @@ function exportHTML(){
   const byDate={};
   logs.forEach(l=>{const d=l.date||'日付なし';if(!byDate[d])byDate[d]=[];byDate[d].push(l)});
 
-  const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了'};
-  const EV_COLOR={depart:'#bf1a00',arrive:'#0a5e22',start:'#b84f00',end:'#555'};
+  const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了',pass:'通過'};
+  const EV_COLOR={depart:'#bf1a00',arrive:'#0a5e22',start:'#b84f00',end:'#555',pass:'#003fa0'};
   const CAT_ICON={
     移動:'🚗',新幹線:'🚄',鉄道:'🚃',バス:'🚌',タクシー:'🚕',飛行機:'✈️',
     宿泊:'🏨',飲食:'🍜',娯楽:'🎭',買い物:'🛍️',その他:'📌',
@@ -1291,7 +1296,7 @@ function parseAndImportCSV(text){
   const first=lines[0].split(',')[0].replace(/"/g,'').trim();
   if(isNaN(Date.parse(first))&&first!==''){start=1}
 
-  const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end'};
+  const EV_MAP={'出発':'depart','到着':'arrive','開始':'start','終了':'end','通過':'pass'};
   const CONT_MAP={
     'クルマ':'transport','移動':'transport','徒歩':'walk','新幹線':'shinkansen','鉄道':'train','高速':'expressway',
     'バス':'bus','タクシー':'taxi','飛行機':'airplane','ガソリン':'gasoline',
