@@ -101,6 +101,38 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 #page-log .blbl{font-size:14px}
 #page-log .sec{font-size:13px}
 
+/* ── QUICK ── */
+.quick-wrap{padding:14px}
+.quick-hint{font-size:12px;color:var(--ink3);line-height:1.6;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:16px}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.qk-btn{aspect-ratio:1.25;border-radius:16px;border:2.5px solid var(--border2);background:var(--surface);font-family:var(--sans);font-weight:900;font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:transform .1s;color:var(--ink2)}
+.qk-btn:active{transform:scale(.93)}
+.qk-ic{font-size:32px}
+.qk-depart{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.qk-arrive{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.qk-pass{border-color:var(--blue);color:var(--blue);background:var(--blue-bg)}
+.qk-start{border-color:var(--orange);color:var(--orange);background:var(--orange-bg)}
+.qk-end{border-color:var(--gray);color:var(--ink2);background:var(--gray-bg)}
+.qk-exp{border-color:var(--gold);color:var(--gold);background:var(--gold-bg);grid-column:span 2;aspect-ratio:auto;padding:14px}
+.quick-recent-wrap h3{font-size:13px;color:var(--ink3);margin-bottom:8px;font-weight:700}
+.qr-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.qr-row:active{background:var(--surface2)}
+.qr-ic{font-size:18px;flex-shrink:0}
+.qr-time{font-family:var(--mono);font-weight:700;font-size:14px;flex-shrink:0}
+.qr-ev{font-size:12px;font-weight:700;flex-shrink:0}
+.qr-place{font-size:12px;color:var(--ink3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qr-badge{flex-shrink:0;font-size:10px;font-weight:700;color:var(--gold);background:var(--gold-bg);padding:2px 7px;border-radius:8px}
+.qr-empty{font-size:12px;color:var(--ink3);text-align:center;padding:16px 0}
+
+/* ── Place suggest (nearby candidates) ── */
+.place-suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ps-chip{font-size:12px;font-weight:700;color:var(--blue);background:var(--blue-bg);border:1.5px solid var(--blue);border-radius:14px;padding:5px 11px;cursor:pointer}
+.ps-chip:active{opacity:.7}
+.ps-loading,.ps-empty{font-size:11px;color:var(--ink3)}
+
+/* ── Quick-tap 要編集バッジ ── */
+.qk-flag{font-size:10px;font-weight:700;color:var(--gold);background:var(--gold-bg);padding:2px 7px;border-radius:8px;margin-left:6px;white-space:nowrap;flex-shrink:0}
+
 /* ── HOME ── */
 .home-hdr{padding:14px 14px 8px;display:flex;align-items:center;justify-content:space-between}
 .home-hdr h2{font-size:16px;font-weight:900;color:var(--ink2)}
@@ -322,7 +354,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 <div id="app">
   <div id="header">
     <div class="logo">Tabi<em>Log</em></div>
-    <div class="ver-tag">v4.0</div>
+    <div class="ver-tag">v4.1</div>
   </div>
   <div id="content">
 
@@ -330,6 +362,25 @@ input:checked+.slider::before{transform:translateX(20px)}
     <div class="page active" id="page-home">
       <div class="home-hdr"><h2>📋 出張・旅一覧</h2></div>
       <div class="trip-list" id="trip-list"></div>
+    </div>
+
+    <!-- QUICK -->
+    <div class="page" id="page-quick">
+      <div class="quick-wrap">
+        <div class="quick-hint">押すだけで「時刻」と「位置」を記録します。場所名などの詳細は、あとで📋ログ画面から編集できます。</div>
+        <div class="quick-grid">
+          <button class="qk-btn qk-depart" onclick="quickTap('depart')"><span class="qk-ic">🚗</span>出発</button>
+          <button class="qk-btn qk-arrive" onclick="quickTap('arrive')"><span class="qk-ic">📍</span>到着</button>
+          <button class="qk-btn qk-pass" onclick="quickTap('pass')"><span class="qk-ic">◎</span>通過</button>
+          <button class="qk-btn qk-start" onclick="quickTap('start')"><span class="qk-ic">▶️</span>開始</button>
+          <button class="qk-btn qk-end" onclick="quickTap('end')"><span class="qk-ic">⏹️</span>終了</button>
+          <button class="qk-btn qk-exp" onclick="openQuickExpense()"><span class="qk-ic">💴</span>支出</button>
+        </div>
+        <div class="quick-recent-wrap">
+          <h3>最近の記録</h3>
+          <div id="quick-recent"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ACTION -->
@@ -354,6 +405,7 @@ input:checked+.slider::before{transform:translateX(20px)}
             <button class="gps-btn" id="gps-btn" onclick="getLocation()">📍 現在地</button>
             <input class="place-input" type="text" id="ac-place" placeholder="場所名を入力…" oninput="checkActionValid()">
           </div>
+          <div class="place-suggest" id="place-suggest"></div>
         </div>
         <!-- Category -->
         <div class="fld">
@@ -506,7 +558,7 @@ input:checked+.slider::before{transform:translateX(20px)}
           <p>現在選択中の出張・旅のデータをすべて削除します。取り消せません。</p>
           <button class="btn-red" onclick="deleteCurrentTrip()">現在の出張・旅を削除</button>
         </div>
-        <div class="ver-foot">TabiLog v4.0 · eachk2-art.github.io/tabilog/</div>
+        <div class="ver-foot">TabiLog v4.1 · eachk2-art.github.io/tabilog/</div>
       </div>
     </div>
 
@@ -514,6 +566,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 
   <div id="nav">
     <div class="nb active" onclick="swPage('home',this)"><div class="ic">🏠</div><div class="lb">ホーム</div></div>
+    <div class="nb" onclick="swPage('quick',this)"><div class="ic">⚡</div><div class="lb">クイック</div></div>
     <div class="nb" onclick="swPage('action',this)"><div class="ic">📍</div><div class="lb">行動</div></div>
     <div class="nb" onclick="swPage('expense',this)"><div class="ic">💴</div><div class="lb">支出</div></div>
     <div class="nb" onclick="swPage('log',this)"><div class="ic">📋</div><div class="lb">ログ</div></div>
@@ -562,6 +615,18 @@ input:checked+.slider::before{transform:translateX(20px)}
     <div class="emf"><label>目的地・概要（任意）</label><input type="text" id="te-summary"></div>
     <button class="btnp" onclick="saveTripEdit()" style="margin-top:4px">保存する</button>
     <button class="btns" onclick="closeTripEdit()" style="width:100%;margin-top:8px;text-align:center">キャンセル</button>
+  </div>
+</div>
+
+<!-- Quick Expense Modal -->
+<div class="mov" id="quick-exp-modal" onclick="closeQuickExpense(event)">
+  <div class="mod">
+    <div class="mh"></div>
+    <h2>💴 支出をクイック記録</h2>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6">時刻と位置はすでに記録されています。金額だけ入力してください。内容・支払方法などはあとでログ画面から編集できます。</p>
+    <div class="emf"><label>金額（円）</label><input type="number" id="qe-amt" inputmode="numeric" placeholder="0" style="font-family:var(--mono);font-size:26px;font-weight:700;text-align:right"></div>
+    <button class="btnp" onclick="saveQuickExpense()" style="margin-top:4px">記録する</button>
+    <button class="btns" onclick="closeQuickExpense()" style="width:100%;margin-top:8px;text-align:center">キャンセル</button>
   </div>
 </div>
 
@@ -630,6 +695,8 @@ const EV_LABEL={depart:'出発',arrive:'到着',start:'開始',end:'終了',pass
 let selCont='shinkansen', selPay='現金', expKind='out';
 let lat=null, lng=null;
 let selEv_='depart', editingId=null;
+let psCache={}, qePending=null;
+const QK_ICON={depart:'🚗',arrive:'📍',pass:'◎',start:'▶️',end:'⏹️'};
 
 // ══ Init ══
 load();
@@ -669,6 +736,7 @@ function swPage(n,btn){
   if(n==='home')refreshHome();
   if(n==='log')refreshLog();
   if(n==='settings')refreshStorage();
+  if(n==='quick')refreshQuickRecent();
   if(n==='action'){document.getElementById('ac-date').value=today();document.getElementById('ac-hhmm').value=nowHHMM();checkActionValid();}
   if(n==='expense'){document.getElementById('exp-date').value=today();document.getElementById('exp-hhmm').value=nowHHMM();setExpKind('out');checkExpValid();}
 }
@@ -705,15 +773,64 @@ function checkExpValid(){
 function getLocation(){
   if(!navigator.geolocation){toast('位置情報非対応');return}
   document.getElementById('gps-btn').textContent='取得中…';
+  const sEl=document.getElementById('place-suggest');if(sEl)sEl.innerHTML='';
   navigator.geolocation.getCurrentPosition(p=>{
     lat=p.coords.latitude;lng=p.coords.longitude;
     document.getElementById('gps-btn').textContent='📍 取得済';
     document.getElementById('gps-btn').classList.add('located');
     toast('📍 現在地を取得しました');
+    if(sEl){
+      sEl.innerHTML='<span class="ps-loading">周辺の候補を検索中…</span>';
+      lookupNearbyCandidates(lat,lng,list=>renderPlaceSuggest('place-suggest','ac-place',list));
+    }
   },()=>{
     document.getElementById('gps-btn').textContent='📍 現在地';
     toast('位置情報の取得に失敗しました');
   });
+}
+
+// ══ 周辺候補検索（OpenStreetMap / Overpass API）══
+function fetchWithTimeout(url,ms){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),ms);
+  return fetch(url,{signal:ctrl.signal}).finally(()=>clearTimeout(timer));
+}
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000,toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function lookupNearbyCandidates(lat,lng,cb){
+  const q=`[out:json][timeout:8];(node(around:200,${lat},${lng})["name"];way(around:200,${lat},${lng})["name"];);out center 15;`;
+  const url='https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q);
+  fetchWithTimeout(url,9000).then(r=>r.json()).then(d=>{
+    const seen=new Set();
+    const list=(d.elements||[]).map(e=>{
+      const elat=e.lat!=null?e.lat:(e.center&&e.center.lat);
+      const elng=e.lon!=null?e.lon:(e.center&&e.center.lon);
+      if(elat==null||elng==null||!e.tags||!e.tags.name)return null;
+      return{name:e.tags.name,dist:haversine(lat,lng,elat,elng)};
+    }).filter(Boolean)
+      .filter(x=>{if(seen.has(x.name))return false;seen.add(x.name);return true})
+      .sort((a,b)=>a.dist-b.dist)
+      .slice(0,6);
+    cb(list);
+  }).catch(()=>cb([]));
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function renderPlaceSuggest(containerId,inputId,list){
+  psCache[containerId]={inputId,list};
+  const el=document.getElementById(containerId);if(!el)return;
+  if(!list||!list.length){el.innerHTML='<span class="ps-empty">近くの候補が見つかりませんでした（手入力してください）</span>';return}
+  el.innerHTML=list.map((c,i)=>`<span class="ps-chip" onclick="pickPlaceSuggest('${containerId}',${i})">📍 ${escapeHtml(c.name)}</span>`).join('');
+}
+function pickPlaceSuggest(containerId,idx){
+  const cache=psCache[containerId];if(!cache)return;
+  const c=cache.list[idx];if(!c)return;
+  const inp=document.getElementById(cache.inputId);
+  if(inp){inp.value=c.name;inp.dispatchEvent(new Event('input'))}
+  document.getElementById(containerId).innerHTML='';
 }
 
 // ══ Save Action ══
@@ -793,6 +910,108 @@ function saveExpense(){
   document.getElementById('exp-hhmm').value=nowHHMM();
   checkExpValid();
   toast('💴 ¥'+amt.toLocaleString()+' を記録しました');refreshLog();
+}
+
+// ══ Quick Tap ══
+function quickTap(ev){
+  if(!S.curId){toast('まず出張・旅を選んでください');swPage('home',document.querySelector('.nb'));return}
+  const log={
+    id:uid(),tid:S.curId,type:'action',
+    ev,date:today(),hhmm:nowHHMM(),
+    cat:'',place:'',detail:'',memo:'',
+    lat:null,lng:null,quick:true,ts:Date.now()
+  };
+  S.logs.push(log);
+  sv();
+  toast(`${QK_ICON[ev]} ${EV_LABEL[ev]}を記録しました（${fmtT(log.hhmm)}）`);
+  refreshLog();refreshQuickRecent();
+  quickLocate(log.id);
+}
+function quickLocate(logId){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(p=>{
+    const l=S.logs.find(x=>x.id===logId);if(!l)return;
+    l.lat=p.coords.latitude;l.lng=p.coords.longitude;sv();
+    lookupNearbyCandidates(l.lat,l.lng,list=>{
+      const l2=S.logs.find(x=>x.id===logId);if(!l2)return;
+      if(list&&list.length){l2.place=list[0].name;l2.quick=false}
+      sv();refreshLog();refreshQuickRecent();
+    });
+  },()=>{/* GPS失敗時は手入力に委ねる（quickフラグは残す）*/},{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+}
+
+// ══ Quick Expense ══
+function openQuickExpense(){
+  if(!S.curId){toast('まず出張・旅を選んでください');swPage('home',document.querySelector('.nb'));return}
+  qePending={date:today(),hhmm:nowHHMM(),lat:null,lng:null};
+  document.getElementById('qe-amt').value='';
+  document.getElementById('quick-exp-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('qe-amt').focus(),150);
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{
+      if(qePending){qePending.lat=p.coords.latitude;qePending.lng=p.coords.longitude}
+    },()=>{},{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+  }
+}
+function closeQuickExpense(e){
+  if(!e||e.target===document.getElementById('quick-exp-modal')){
+    document.getElementById('quick-exp-modal').classList.remove('open');qePending=null;
+  }
+}
+function saveQuickExpense(){
+  if(!qePending)return;
+  const amt=parseInt(document.getElementById('qe-amt').value)||0;
+  if(!amt){toast('金額を入力してください');return}
+  const cont=CONTENTS.find(c=>c.id==='other');
+  const log={
+    id:uid(),tid:S.curId,type:'exp',kind:'out',
+    date:qePending.date,hhmm:qePending.hhmm,
+    cont:'other',ce:cont.e,cn:cont.n,
+    amt,pay:'現金',plc:'',detail:'',memo:'',seisan:true,
+    lat:qePending.lat,lng:qePending.lng,quick:true,ts:Date.now()
+  };
+  S.logs.push(log);sv();
+  document.getElementById('quick-exp-modal').classList.remove('open');
+  toast(`💴 ¥${amt.toLocaleString()} を記録しました`);
+  refreshLog();refreshQuickRecent();
+  if(log.lat!=null){
+    lookupNearbyCandidates(log.lat,log.lng,list=>{
+      const l2=S.logs.find(x=>x.id===log.id);if(!l2)return;
+      if(list&&list.length){l2.plc=list[0].name;l2.quick=false}
+      sv();refreshLog();refreshQuickRecent();
+    });
+  }
+  qePending=null;
+}
+
+// ══ Quick Recent list ══
+function refreshQuickRecent(){
+  const el=document.getElementById('quick-recent');if(!el)return;
+  if(!S.curId){el.innerHTML='<div class="qr-empty">出張・旅を選択してください</div>';return}
+  const items=curLogs().slice(-6).reverse();
+  if(!items.length){el.innerHTML='<div class="qr-empty">まだ記録がありません</div>';return}
+  el.innerHTML=items.map(l=>{
+    const time=fmtT(l.hhmm);
+    if(l.type==='action'){
+      const place=l.place||'（未入力）';
+      return`<div class="qr-row" onclick="openEdit('${l.id}')">
+        <span class="qr-ic">${QK_ICON[l.ev]||'📌'}</span>
+        <span class="qr-time">${time}</span>
+        <span class="qr-ev">${EV_LABEL[l.ev]||l.ev}</span>
+        <span class="qr-place">${place}</span>
+        ${l.quick?'<span class="qr-badge">⚡要編集</span>':''}
+      </div>`;
+    } else {
+      const place=l.plc||'';
+      return`<div class="qr-row" onclick="openEdit('${l.id}')">
+        <span class="qr-ic">💴</span>
+        <span class="qr-time">${time}</span>
+        <span class="qr-ev">¥${(l.amt||0).toLocaleString()}</span>
+        <span class="qr-place">${place}</span>
+        ${l.quick?'<span class="qr-badge">⚡要編集</span>':''}
+      </div>`;
+    }
+  }).join('');
 }
 
 // ══ Home ══
@@ -1001,8 +1220,9 @@ function renderLogRow(l, isLast){
           <span class="tl-time">${time}</span>
           <span class="tl-ev">${evLabel}</span>
           <span class="tl-cat-icon">${icon}</span>
-          <span class="tl-place">${l.place}</span>
+          <span class="tl-place">${l.place||'（未入力）'}</span>
           <span style="font-size:11px;color:var(--ink3);margin-left:4px">${l.cat}</span>
+          ${l.quick?'<span class="qk-flag">⚡要編集</span>':''}
           <span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">${hasDetail?'▶':''}</span>
         </div>
         <div class="log-detail closed" id="${lid}">
@@ -1035,6 +1255,7 @@ function renderLogRow(l, isLast){
           <span class="tl-exp-name">${l.cn||''}</span>
           <span class="tl-exp-amt" style="color:${amtColor}">${amtPrefix}¥${(l.amt||0).toLocaleString()}</span>
           ${stag}${ptag}
+          ${l.quick?'<span class="qk-flag">⚡要編集</span>':''}
           <span style="font-size:10px;color:var(--ink3);margin-left:auto" id="arr-${lid}">${hasDetail?'▶':''}</span>
         </div>
         <div class="log-detail closed" id="${lid}">
@@ -1096,6 +1317,7 @@ function closeEdit(e){
 }
 function saveEdit(){
   const l=S.logs.find(x=>x.id===editingId);if(!l)return;
+  l.quick=false;
   if(l.type==='action'){
     l.ev=document.getElementById('ed-ev').value;
     l.date=document.getElementById('ed-date').value;
