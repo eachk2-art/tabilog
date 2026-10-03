@@ -241,6 +241,14 @@ input:checked+.slider::before{transform:translateX(20px)}
 .ls .lv{font-family:var(--mono);font-size:14px;font-weight:700;word-break:break-all}
 .ls .lv.red{color:var(--red)}
 .ls .lv.blue{color:var(--blue)}
+.money-boxes{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.money-box{background:var(--surface2);border:1.5px solid var(--border2);border-radius:10px;padding:10px 12px}
+.money-box-title{font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:6px;letter-spacing:.3px}
+.money-row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;font-family:var(--mono)}
+.money-row span:first-child{font-family:var(--sans);color:var(--ink2);font-size:12px}
+.money-row-total{border-top:1.5px solid var(--border2);margin-top:4px;padding-top:6px;font-weight:700;font-size:15px}
+.money-ref{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--ink3)}
+.money-ref b{font-family:var(--mono);color:var(--ink2);font-weight:700}
 
 /* Bar chart */
 .bsec{margin:0 12px 10px}
@@ -358,7 +366,7 @@ input:checked+.slider::before{transform:translateX(20px)}
 <div id="app">
   <div id="header">
     <div class="logo">Tabi<em>Log</em></div>
-    <div class="ver-tag">v4.1</div>
+    <div class="ver-tag">v4.2</div>
   </div>
   <div id="content">
 
@@ -483,13 +491,27 @@ input:checked+.slider::before{transform:translateX(20px)}
       <div class="log-tripbar" id="log-tripbar">
         <div class="lt-no" id="lt-no">—</div>
         <div class="lt-name" id="lt-name">出張・旅を選択してください</div>
-        <div class="lt-stats">
-          <div class="ls"><div class="ll">支出合計</div><div class="lv red" id="lt-tot">¥0</div></div>
-          <div class="ls"><div class="ll">収入合計</div><div class="lv" style="color:var(--green)" id="lt-income">¥0</div></div>
+        <div class="money-boxes">
+          <div class="money-box">
+            <div class="money-box-title">💼 会社との精算</div>
+            <div class="money-row"><span>仮払金</span><span id="lt-advance">¥0</span></div>
+            <div class="money-row"><span>精算対象支出</span><span id="lt-seisan">−¥0</span></div>
+            <div class="money-row"><span>日当</span><span id="lt-perdiem">−¥0</span></div>
+            <div class="money-row money-row-total"><span id="lt-refund-label">会社へ返金</span><span id="lt-refund">¥0</span></div>
+          </div>
+          <div class="money-box">
+            <div class="money-box-title">👛 手持ち資金</div>
+            <div class="money-row"><span>仮払現金</span><span id="lt-wallet-advance">¥0</span></div>
+            <div class="money-row"><span>個人現金</span><span id="lt-wallet-cash">¥0</span></div>
+            <div class="money-row"><span>Suica</span><span id="lt-wallet-suica">¥0</span></div>
+            <div class="money-row"><span>nanaco</span><span id="lt-wallet-nanaco">¥0</span></div>
+            <div class="money-row"><span>電子マネー</span><span id="lt-wallet-emoney">¥0</span></div>
+          </div>
         </div>
-        <div class="lt-stats" style="margin-top:8px">
-          <div class="ls"><div class="ll">精算対象</div><div class="lv blue" id="lt-seisan">¥0</div></div>
-          <div class="ls"><div class="ll">収支</div><div class="lv" id="lt-balance">¥0</div></div>
+        <div class="money-ref">
+          <span>支出合計 <b id="lt-tot">¥0</b></span>
+          <span>個人負担支出 <b id="lt-personal-exp">¥0</b></span>
+          <span>収入合計（日当等） <b id="lt-income">¥0</b></span>
         </div>
       </div>
       <!-- 内容別集計 折りたたみ -->
@@ -524,6 +546,13 @@ input:checked+.slider::before{transform:translateX(20px)}
           <div id="storage-bar-wrap" style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
             <div id="storage-bar" style="height:100%;background:var(--blue);border-radius:4px;transition:width .4s ease;width:0%"></div>
           </div>
+        </div>
+        <div class="settings-card">
+          <h3>🧾 出張費精算書</h3>
+          <p>選択中の出張・旅から、精算対象の支出と日当を発生順に並べた精算書を作成します（日当は各日の最終行）。印刷用HTMLはブラウザで開いて「印刷」→「PDFに保存」で提出用PDFにできます。</p>
+          <div class="fld"><label>氏名（精算書に記載）</label><input type="text" id="set-username" placeholder="例：久保田昌史" onchange="saveUserName()"></div>
+          <button class="btnp" onclick="exportSettlementHTML()">精算書（印刷用HTML）を書き出す</button>
+          <button class="btns" onclick="exportSettlementCSV()" style="width:100%;margin-top:8px;text-align:center;padding:11px">精算書をCSVで書き出す</button>
         </div>
         <div class="settings-card">
           <h3>📊 CSVで書き出す</h3>
@@ -562,7 +591,7 @@ input:checked+.slider::before{transform:translateX(20px)}
           <p>現在選択中の出張・旅のデータをすべて削除します。取り消せません。</p>
           <button class="btn-red" onclick="deleteCurrentTrip()">現在の出張・旅を削除</button>
         </div>
-        <div class="ver-foot">TabiLog v4.1 · eachk2-art.github.io/tabilog/</div>
+        <div class="ver-foot">TabiLog v4.2 · eachk2-art.github.io/tabilog/</div>
       </div>
     </div>
 
@@ -589,7 +618,8 @@ input:checked+.slider::before{transform:translateX(20px)}
       <div class="emf" style="flex:1;margin:0"><label>開始日</label><input type="date" id="nt-start"></div>
       <div class="emf" style="flex:1;margin:0"><label>終了日</label><input type="date" id="nt-end"></div>
     </div>
-    <div class="emf"><label>目的地・概要（任意）</label><input type="text" id="nt-summary" placeholder="例：愛知県豊橋市、中部飼料打合せ"></div>
+    <div class="emf"><label>目的地（任意）</label><input type="text" id="nt-dest" placeholder="例：愛知県豊橋市"></div>
+    <div class="emf"><label>概要（任意）</label><input type="text" id="nt-summary" placeholder="例：中部飼料打合せ"></div>
     <button class="btnp" onclick="createTrip()">作成する</button>
   </div>
 </div>
@@ -616,7 +646,8 @@ input:checked+.slider::before{transform:translateX(20px)}
       <div class="emf" style="flex:1;margin:0"><label>開始日</label><input type="date" id="te-start"></div>
       <div class="emf" style="flex:1;margin:0"><label>終了日</label><input type="date" id="te-end"></div>
     </div>
-    <div class="emf"><label>目的地・概要（任意）</label><input type="text" id="te-summary"></div>
+    <div class="emf"><label>目的地（任意）</label><input type="text" id="te-dest"></div>
+    <div class="emf"><label>概要（任意）</label><input type="text" id="te-summary"></div>
     <button class="btnp" onclick="saveTripEdit()" style="margin-top:4px">保存する</button>
     <button class="btns" onclick="closeTripEdit()" style="width:100%;margin-top:8px;text-align:center">キャンセル</button>
   </div>
@@ -646,39 +677,49 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 
 // ══ Masters ══
 const CONTENTS=[
-  // 共通
-  {id:'transport',  e:'🚗', n:'移動'},
-  {id:'shinkansen', e:'🚄', n:'新幹線'},
-  {id:'train',      e:'🚃', n:'鉄道'},
-  {id:'expressway', e:'🛣️', n:'高速'},
-  {id:'bus',        e:'🚌', n:'バス'},
-  {id:'taxi',       e:'🚕', n:'タクシー'},
-  {id:'airplane',   e:'✈️', n:'飛行機'},
-  {id:'gasoline',   e:'⛽', n:'ガソリン'},
-  {id:'parking',    e:'🅿️', n:'駐車場'},
-  {id:'hotel',      e:'🏨', n:'宿泊'},
-  {id:'meal',       e:'🍜', n:'飲食'},
-  {id:'drink',      e:'☕', n:'飲料'},
-  {id:'conbini',    e:'🏪', n:'コンビニ'},
-  {id:'jidohanbaiki',e:'🥤',n:'自販機'},
-  {id:'entertain',  e:'🎭', n:'娯楽'},
-  {id:'shopping',   e:'🛍️', n:'買い物'},
-  {id:'souvenir',   e:'🎁', n:'土産'},
-  {id:'supplies',   e:'📦', n:'備品'},
-  {id:'meeting',    e:'🤝', n:'会議費'},
-  {id:'allowance',  e:'💰', n:'日当'},
-  // 収入専用
-  {id:'advance',    e:'💴', n:'仮払い'},
-  {id:'gift',       e:'🎀', n:'餞別'},
-  {id:'cash_hold',  e:'💵', n:'現金手持ち'},
-  {id:'suica_bal',  e:'🚃', n:'Suica残高'},
-  {id:'nanaco_bal', e:'🟡', n:'ナナコ残高'},
-  {id:'emoney_bal', e:'💳', n:'電子マネー残高'},
-  {id:'suica_chg',  e:'⚡', n:'Suicaチャージ'},
-  {id:'nanaco_chg', e:'⚡', n:'ナナコチャージ'},
-  {id:'other',      e:'📋', n:'その他'},
+  // 支出用
+  {id:'transport',  e:'🚗', n:'移動',       k:'out'},
+  {id:'shinkansen', e:'🚄', n:'新幹線',     k:'out'},
+  {id:'train',      e:'🚃', n:'鉄道',       k:'out'},
+  {id:'expressway', e:'🛣️', n:'高速',       k:'out'},
+  {id:'bus',        e:'🚌', n:'バス',       k:'out'},
+  {id:'taxi',       e:'🚕', n:'タクシー',   k:'out'},
+  {id:'airplane',   e:'✈️', n:'飛行機',     k:'out'},
+  {id:'gasoline',   e:'⛽', n:'ガソリン',   k:'out'},
+  {id:'parking',    e:'🅿️', n:'駐車場',     k:'out'},
+  {id:'hotel',      e:'🏨', n:'宿泊',       k:'out'},
+  {id:'meal',       e:'🍜', n:'飲食',       k:'out'},
+  {id:'drink',      e:'☕', n:'飲料',       k:'out'},
+  {id:'conbini',    e:'🏪', n:'コンビニ',   k:'out'},
+  {id:'jidohanbaiki',e:'🥤',n:'自販機',     k:'out'},
+  {id:'entertain',  e:'🎭', n:'娯楽',       k:'out'},
+  {id:'shopping',   e:'🛍️', n:'買い物',     k:'out'},
+  {id:'souvenir',   e:'🎁', n:'土産',       k:'out'},
+  {id:'supplies',   e:'📦', n:'備品',       k:'out'},
+  {id:'meeting',    e:'🤝', n:'会議費',     k:'out'},
+  {id:'fund_out',   e:'🏦', n:'資金移動（入金・チャージ元）', k:'out'},
+  // 収入用（最終的に個人のお金になるもの）
+  {id:'allowance',  e:'💰', n:'日当',       k:'in'},
+  {id:'gift',       e:'🎀', n:'餞別',       k:'in'},
+  // 収入ではない特別な入力（仮払金・資金残高・資金移動）
+  {id:'advance',    e:'💴', n:'仮払金',     k:'in'},
+  {id:'cash_hold',  e:'💵', n:'現金手持ち（資金残高）', k:'in'},
+  {id:'suica_bal',  e:'🚃', n:'Suica残高（資金残高）', k:'in'},
+  {id:'nanaco_bal', e:'🟡', n:'ナナコ残高（資金残高）', k:'in'},
+  {id:'emoney_bal', e:'💳', n:'電子マネー残高（資金残高）', k:'in'},
+  {id:'suica_chg',  e:'⚡', n:'Suicaチャージ（資金移動）', k:'in'},
+  {id:'nanaco_chg', e:'⚡', n:'ナナコチャージ（資金移動）', k:'in'},
+  {id:'other',      e:'📋', n:'その他',     k:'both'},
 ];
-const PAYS=['現金','カード','Suica','ナナコ','ETC','電子マネー'];
+// 収入のうち「会社への返金額」や「資金残高」の計算に使う特別カテゴリ（真の個人収入ではない）
+const ADVANCE_CAT='advance';
+const WALLET_INIT_CATS=['cash_hold','suica_bal','nanaco_bal','emoney_bal'];
+const CHARGE_CATS=['suica_chg','nanaco_chg'];
+const PERDIEM_CAT='allowance';
+const FUND_OUT_CAT='fund_out';
+const WALLET_PAY_MAP={cash_hold:'現金',suica_bal:'Suica',nanaco_bal:'ナナコ',emoney_bal:'電子マネー'};
+const CHARGE_PAY_MAP={suica_chg:'Suica',nanaco_chg:'ナナコ'};
+const PAYS=['現金','カード','Suica','ナナコ','ETC','電子マネー','仮払現金'];
 const BCOLS=['#bf1a00','#003fa0','#0a5e22','#7a5200','#7c4dff','#0097a7','#e91e63','#ff6f00','#546e7a','#2e7d32','#ad1457','#00838f','#4527a0'];
 const CAT_ICON={
   // 共通
@@ -739,7 +780,7 @@ function swPage(n,btn){
   btn.classList.add('active');
   if(n==='home')refreshHome();
   if(n==='log')refreshLog();
-  if(n==='settings')refreshStorage();
+  if(n==='settings'){refreshStorage();document.getElementById('set-username').value=S.userName||'';}
   if(n==='quick')refreshQuickRecent();
   if(n==='action'){document.getElementById('ac-date').value=today();document.getElementById('ac-hhmm').value=nowHHMM();checkActionValid();}
   if(n==='expense'){document.getElementById('exp-date').value=today();document.getElementById('exp-hhmm').value=nowHHMM();setExpKind('out');checkExpValid();}
@@ -866,13 +907,77 @@ function saveAction(){
   toast('📌 記録しました');refreshLog();
 }
 
+// ══ Money calc（全画面共通の計算ロジック）══
+function calcMoney(logs){
+  const exps=logs.filter(l=>l.type==='exp');
+  const g={advance:[],walletInit:[],charge:[],fundOut:[],realIn:[],realOut:[]};
+  exps.forEach(l=>{
+    // 内容（cont）を優先して分類する：旧データで種別が支出/収入どちらで登録されていても正しく扱うため
+    if(l.cont===ADVANCE_CAT)g.advance.push(l);
+    else if(WALLET_INIT_CATS.includes(l.cont))g.walletInit.push(l);
+    else if(CHARGE_CATS.includes(l.cont))g.charge.push(l);
+    else if(l.cont===FUND_OUT_CAT)g.fundOut.push(l);
+    else if(l.cont===PERDIEM_CAT)g.realIn.push(l); // 日当は支出・収入どちらで登録されていても日当として集計（旧データ互換）
+    else if(l.kind==='in')g.realIn.push(l);
+    else g.realOut.push(l);
+  });
+  const sum=(arr,pred)=>arr.filter(pred||(()=>true)).reduce((s,l)=>s+(l.amt||0),0);
+  const m={g};
+  m.tot=sum(g.realOut);
+  m.income=sum(g.realIn);
+  m.seisan=sum(g.realOut,l=>l.seisan);
+  m.personalExp=sum(g.realOut,l=>!l.seisan);
+  m.advance=sum(g.advance);
+  m.perdiem=sum(g.realIn,l=>l.cont===PERDIEM_CAT);
+  m.refund=m.advance-m.seisan-m.perdiem; // ＋＝会社へ返金／−＝会社から追加支給
+  const spent=p=>sum(g.realOut,l=>l.pay===p)+sum(g.fundOut,l=>l.pay===p);
+  const chargedFrom=p=>sum(g.charge,l=>l.pay===p);
+  m.wallet={
+    advanceCash:m.advance-spent('仮払現金')-chargedFrom('仮払現金'),
+    cash:sum(g.walletInit,l=>l.cont==='cash_hold')-spent('現金')-chargedFrom('現金'),
+    suica:sum(g.walletInit,l=>l.cont==='suica_bal')+sum(g.charge,l=>l.cont==='suica_chg')-spent('Suica'),
+    nanaco:sum(g.walletInit,l=>l.cont==='nanaco_bal')+sum(g.charge,l=>l.cont==='nanaco_chg')-spent('ナナコ'),
+    emoney:sum(g.walletInit,l=>l.cont==='emoney_bal')-spent('電子マネー'),
+  };
+  // 精算書の明細：精算対象ONの支出＋日当
+  m.settleRows=g.realOut.filter(l=>l.seisan).concat(g.realIn.filter(l=>l.cont===PERDIEM_CAT));
+  m.settleTotal=sum(m.settleRows);
+  m.settleDiff=m.settleTotal-m.advance; // 精算書の「差額」（−なら返金）
+  return m;
+}
+
 // ══ Save Expense ══
+function contsForKind(kind){return CONTENTS.filter(c=>c.k===kind||c.k==='both')}
 function renderCpicker(){
-  document.getElementById('cpicker').innerHTML=CONTENTS.map(c=>
+  const list=contsForKind(expKind);
+  if(!list.find(c=>c.id===selCont))selCont=list[0].id;
+  document.getElementById('cpicker').innerHTML=list.map(c=>
     `<div class="copt ${c.id===selCont?'sel':''}" onclick="selC('${c.id}')"><div class="em">${c.e}</div><span class="nm">${c.n}</span></div>`
   ).join('');
+  updateFieldVisibility();
 }
 function selC(id){selCont=id;renderCpicker()}
+function payFieldRelevant(){
+  if(expKind==='out')return true;
+  return CHARGE_CATS.includes(selCont);
+}
+function updateFieldVisibility(){
+  const payFld=document.getElementById('paypills').closest('.fld');
+  if(payFld){
+    payFld.style.display=payFieldRelevant()?'':'none';
+    const lb=payFld.querySelector('label');
+    if(lb)lb.textContent=CHARGE_CATS.includes(selCont)?'チャージ元（どのお金でチャージしたか）':selCont===FUND_OUT_CAT?'出どころ（どのお金を移したか）':'支払方法';
+  }
+  const seisanBox=document.getElementById('exp-seisan');
+  if(selCont===FUND_OUT_CAT){
+    seisanBox.checked=false;seisanBox.disabled=true;
+    document.getElementById('seisan-row').style.opacity='.5';
+  }else{
+    if(seisanBox.disabled)seisanBox.checked=true; // 資金移動から切り替えた時は精算対象ONに戻す
+    seisanBox.disabled=false;
+    document.getElementById('seisan-row').style.opacity='1';
+  }
+}
 function renderPaypills(){
   document.getElementById('paypills').innerHTML=PAYS.map(p=>
     `<div class="paypill ${p===selPay?'sel':''}" onclick="selP('${p}')">${p}</div>`
@@ -883,9 +988,10 @@ function setExpKind(kind){
   expKind=kind;
   document.getElementById('exp-type-out').className='ev-btn'+(kind==='out'?' sel-arrive':'');
   document.getElementById('exp-type-in').className='ev-btn'+(kind==='in'?' sel-start':'');
-  document.getElementById('exp-form-title').textContent=kind==='in'?'💰 収入を記録':'💴 支出を記録';
+  document.getElementById('exp-form-title').textContent=kind==='in'?'💰 収入・資金の記録':'💴 支出を記録';
   // 収入のとき精算対象は非表示
   document.getElementById('seisan-row').style.display=kind==='in'?'none':'flex';
+  renderCpicker();
 }
 function saveExpense(){
   if(!S.curId){toast('まず出張・旅を選んでください');swPage('home',document.querySelector('.nb'));return}
@@ -898,11 +1004,11 @@ function saveExpense(){
     date:document.getElementById('exp-date').value,
     hhmm:document.getElementById('exp-hhmm').value.replace(/\D/g,'').padStart(4,'0'),
     cont:selCont,ce:cont.e,cn:cont.n,
-    amt,pay:selPay,
+    amt,pay:payFieldRelevant()?selPay:'',
     plc:document.getElementById('exp-plc').value,
     detail:document.getElementById('exp-detail').value,
     memo:document.getElementById('exp-memo').value,
-    seisan:expKind==='in'?false:document.getElementById('exp-seisan').checked,
+    seisan:(expKind==='in'||selCont===FUND_OUT_CAT)?false:document.getElementById('exp-seisan').checked,
     ts:Date.now()
   });
   sv();
@@ -981,7 +1087,7 @@ function saveQuickExpense(){
   if(log.lat!=null){
     lookupNearbyCandidates(log.lat,log.lng,list=>{
       const l2=S.logs.find(x=>x.id===log.id);if(!l2)return;
-      if(list&&list.length){l2.plc=list[0].name;l2.quick=false}
+      if(list&&list.length){l2.plc=list[0].name} // 内容・支払方法は仮の値なので要編集フラグは残す
       sv();refreshLog();refreshQuickRecent();
     });
   }
@@ -1024,17 +1130,15 @@ function refreshHome(){
   let html='';
   if(S.trips.length){
     html=S.trips.map(t=>{
-      const exps=S.logs.filter(l=>l.tid===t.id&&l.type==='exp');
-      const outExps=exps.filter(l=>l.kind!=='in');
-      const tot=outExps.reduce((s,l)=>s+l.amt,0);
-      const seisan=outExps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+      const M=calcMoney(S.logs.filter(l=>l.tid===t.id));
+      const tot=M.tot, seisan=M.seisan;
       const cnt=S.logs.filter(l=>l.tid===t.id).length;
       const isCur=t.id===S.curId;
       return`<div class="trip-card ${isCur?'selected':''}" onclick="selectTrip('${t.id}')">
         ${isCur?'<div class="sel-badge">● 選択中</div>':''}
         <div class="tc-no">${t.no||'管理番号なし'}</div>
         <div class="tc-name">${t.name}</div>
-        <div class="tc-date">${t.start||''}${t.end?' 〜 '+t.end:''}</div>
+        <div class="tc-date">${t.start||''}${t.end?' 〜 '+t.end:''}${t.dest?' · '+t.dest:''}</div>
         ${t.summary?`<div class="tc-summary">${t.summary}</div>`:''}
         <div class="tc-stats">
           <div class="tc-stat"><div class="lbl">全支出</div><div class="val red">¥${tot.toLocaleString()}</div></div>
@@ -1064,6 +1168,7 @@ function openTripEdit(id){
   document.getElementById('te-start').value=t.start||'';
   document.getElementById('te-end').value=t.end||'';
   document.getElementById('te-summary').value=t.summary||'';
+  document.getElementById('te-dest').value=t.dest||'';
   document.getElementById('trip-edit-modal').classList.add('open');
 }
 function closeTripEdit(e){
@@ -1079,10 +1184,11 @@ function saveTripEdit(){
   t.start=document.getElementById('te-start').value;
   t.end=document.getElementById('te-end').value;
   t.summary=document.getElementById('te-summary').value.trim();
+  t.dest=document.getElementById('te-dest').value.trim();
   sv();closeTripEdit();refreshHome();refreshLog();toast('✅ 出張・旅を更新しました');
 }
 function newTripPrompt(){
-  ['nt-no','nt-name','nt-summary'].forEach(i=>document.getElementById(i).value='');
+  ['nt-no','nt-name','nt-summary','nt-dest'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('nt-start').value=today();
   document.getElementById('nt-end').value=today();
   document.getElementById('new-trip-modal').classList.add('open');
@@ -1095,7 +1201,8 @@ function createTrip(){
     no:document.getElementById('nt-no').value.trim(),
     start:document.getElementById('nt-start').value,
     end:document.getElementById('nt-end').value,
-    summary:document.getElementById('nt-summary').value.trim()};
+    summary:document.getElementById('nt-summary').value.trim(),
+    dest:document.getElementById('nt-dest').value.trim()};
   S.trips.unshift(trip);S.curId=trip.id;sv();
   document.getElementById('new-trip-modal').classList.remove('open');
   refreshHome();refreshLog();toast('✈️ '+name+' を作成しました');
@@ -1107,21 +1214,29 @@ function refreshLog(){
   document.getElementById('lt-no').textContent=t?(t.no||'管理番号なし'):'—';
   document.getElementById('lt-name').textContent=t?t.name:'出張・旅を選択してください';
   const logs=curLogs();
-  const exps=logs.filter(l=>l.type==='exp');
-  const outLogs=exps.filter(l=>l.kind!=='in');
-  const inLogs=exps.filter(l=>l.kind==='in');
-  const tot=outLogs.reduce((s,l)=>s+l.amt,0);
-  const income=inLogs.reduce((s,l)=>s+l.amt,0);
-  const seisan=outLogs.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
-  const balance=income-tot;
+  const M=calcMoney(logs);
+  const outLogs=M.g.realOut;
+  const tot=M.tot,income=M.income,seisan=M.seisan,personalExp=M.personalExp;
+  const advanceTotal=M.advance,perdiemTotal=M.perdiem,refund=M.refund;
+  const walletAdvanceCash=M.wallet.advanceCash,walletCash=M.wallet.cash,walletSuica=M.wallet.suica,walletNanaco=M.wallet.nanaco,walletEmoney=M.wallet.emoney;
+
   document.getElementById('lt-tot').textContent='¥'+tot.toLocaleString();
   document.getElementById('lt-income').textContent='¥'+income.toLocaleString();
-  document.getElementById('lt-seisan').textContent='¥'+seisan.toLocaleString();
-  const balEl=document.getElementById('lt-balance');
-  balEl.textContent=(balance>=0?'+':'')+'¥'+balance.toLocaleString();
-  balEl.style.color=balance>=0?'var(--green)':'var(--red)';
+  document.getElementById('lt-personal-exp').textContent='¥'+personalExp.toLocaleString();
+  document.getElementById('lt-advance').textContent='¥'+advanceTotal.toLocaleString();
+  document.getElementById('lt-seisan').textContent='−¥'+seisan.toLocaleString();
+  document.getElementById('lt-perdiem').textContent='−¥'+perdiemTotal.toLocaleString();
+  const refundEl=document.getElementById('lt-refund');
+  document.getElementById('lt-refund-label').textContent=refund>=0?'会社へ返金':'会社から追加支給';
+  refundEl.textContent='¥'+Math.abs(refund).toLocaleString();
+  refundEl.style.color=refund>=0?'var(--red)':'var(--green)';
+  document.getElementById('lt-wallet-advance').textContent='¥'+walletAdvanceCash.toLocaleString();
+  document.getElementById('lt-wallet-cash').textContent='¥'+walletCash.toLocaleString();
+  document.getElementById('lt-wallet-suica').textContent='¥'+walletSuica.toLocaleString();
+  document.getElementById('lt-wallet-nanaco').textContent='¥'+walletNanaco.toLocaleString();
+  document.getElementById('lt-wallet-emoney').textContent='¥'+walletEmoney.toLocaleString();
 
-  // 内容別bar chart（支出のみ）
+  // 内容別bar chart（支出のみ、資金移動を除く）
   document.getElementById('barchart').innerHTML=CONTENTS.map((c,i)=>{
     const sum=outLogs.filter(l=>l.cont===c.id).reduce((s,l)=>s+l.amt,0);
     if(!sum)return'';
@@ -1129,8 +1244,8 @@ function refreshLog(){
     return`<div class="bitem"><div class="blbl"><span>${c.e} ${c.n}</span><span style="font-family:var(--mono)">¥${sum.toLocaleString()} (${pct}%)</span></div><div class="btrk"><div class="bfil" style="width:${pct}%;background:${BCOLS[i%BCOLS.length]}"></div></div></div>`;
   }).join('');
 
-  // 支払方法別集計（支出のみ）
-  const PAY_COLS={'現金':'#b84f00','カード':'#003fa0','Suica':'#0a5e22','ナナコ':'#ad1457','ETC':'#7a5200','電子マネー':'#7c4dff'};
+  // 支払方法別集計（支出のみ、資金移動を除く）
+  const PAY_COLS={'現金':'#b84f00','カード':'#003fa0','Suica':'#0a5e22','ナナコ':'#ad1457','ETC':'#7a5200','電子マネー':'#7c4dff','仮払現金':'#9a6a00'};
   document.getElementById('paychart').innerHTML=PAYS.map(p=>{
     const outSum=outLogs.filter(l=>l.pay===p).reduce((s,l)=>s+l.amt,0);
     if(!outSum)return'';
@@ -1318,7 +1433,7 @@ function openEdit(id){
       <div class="emf"><label>詳細</label><input type="text" id="ed-detail" value="${l.detail||''}" placeholder="例：はやぶさ102号、田中部長と打合せ…"></div>
       <div class="emf"><label>メモ</label><textarea id="ed-memo">${l.memo||''}</textarea></div>`;
   } else {
-    const contOpts=CONTENTS.map(c=>`<option value="${c.id}" ${c.id===l.cont?'selected':''}>${c.e} ${c.n}</option>`).join('');
+    const contOpts=CONTENTS.filter(c=>c.k===(l.kind==='in'?'in':'out')||c.k==='both'||c.id===l.cont).map(c=>`<option value="${c.id}" ${c.id===l.cont?'selected':''}>${c.e} ${c.n}</option>`).join('');
     const payOpts=PAYS.map(p=>`<option value="${p}" ${p===l.pay?'selected':''}>${p}</option>`).join('');
     html=`
       <div class="emf"><label>日付</label><input type="date" id="ed-date" value="${l.date||''}"></div>
@@ -1372,7 +1487,7 @@ function saveEdit(){
     l.plc=document.getElementById('ed-plc').value;
     l.detail=document.getElementById('ed-detail').value;
     l.memo=document.getElementById('ed-memo').value;
-    l.seisan=document.getElementById('ed-seisan').checked;
+    l.seisan=(l.kind==='in'||l.cont===FUND_OUT_CAT)?false:document.getElementById('ed-seisan').checked;
   }
   sv();closeEdit();refreshLog();toast('✅ 保存しました');
 }
@@ -1424,14 +1539,154 @@ function exportCSV(){
   toast('📊 CSVを書き出しました');
 }
 
+// ══ 出張費精算書 ══
+const SETTLE_CLASSES=['交通','宿泊','交際','備品','会議','日当','その他'];
+const SETTLE_CLASS_MAP={
+  transport:'交通',shinkansen:'交通',train:'交通',expressway:'交通',bus:'交通',taxi:'交通',airplane:'交通',gasoline:'交通',parking:'交通',
+  hotel:'宿泊',
+  meal:'交際',drink:'交際',entertain:'交際',souvenir:'交際',
+  supplies:'備品',shopping:'備品',
+  meeting:'会議',
+  allowance:'日当',
+};
+function saveUserName(){S.userName=document.getElementById('set-username').value.trim();sv();toast('✅ 氏名を保存しました')}
+function settleClass(l){return SETTLE_CLASS_MAP[l.cont]||'その他'}
+function settlePay(l){
+  if(l.cont===PERDIEM_CAT)return'現金';
+  if(l.pay==='仮払現金')return'現金';
+  return l.pay||'';
+}
+function settlePlace(l){
+  // 交通は「詳細」（例：仙台→東京）を優先、それ以外は「場所・店名」を優先
+  if(l.cont===PERDIEM_CAT)return'日当';
+  const isKotsu=settleClass(l)==='交通';
+  return isKotsu?(l.detail||l.plc||''):(l.plc||l.detail||'');
+}
+function settleNote(l){
+  const used=settlePlace(l);
+  const parts=[];
+  if(l.cont!==PERDIEM_CAT){
+    if(l.plc&&l.plc!==used)parts.push(l.plc);
+    if(l.detail&&l.detail!==used)parts.push(l.detail);
+  }
+  if(l.memo)parts.push(l.memo);
+  return parts.join(' ');
+}
+function settleMD(d){if(!d)return'';const[,m,day]=d.split('-');return`${parseInt(m)}月${parseInt(day)}日`}
+function buildSettlement(){
+  const t=curTrip();if(!t)return null;
+  const M=calcMoney(curLogs());
+  // 発生順（日付→時刻）、ただし日当は各日の最終行
+  const rows=M.settleRows.slice().sort((a,b)=>{
+    const da=a.date||'9999-99-99',db=b.date||'9999-99-99';
+    if(da!==db)return da.localeCompare(db);
+    const pa=a.cont===PERDIEM_CAT?1:0,pb=b.cont===PERDIEM_CAT?1:0;
+    if(pa!==pb)return pa-pb;
+    return sortKey(a).localeCompare(sortKey(b));
+  });
+  const byClass={};SETTLE_CLASSES.forEach(c=>byClass[c]=0);
+  rows.forEach(l=>{byClass[settleClass(l)]+=l.amt||0});
+  return{t,M,rows,byClass,total:M.settleTotal,advance:M.advance,diff:M.settleDiff};
+}
+function settleFileName(t,ext){
+  const no=t.no?t.no+'_':'';
+  const name=t.name.replace(/[\s　\/\\:*?"<>|]/g,'');
+  return`出張費精算書_${no}${name}_${today().replace(/-/g,'')}.${ext}`;
+}
+function downloadText(text,filename,mime){
+  const blob=new Blob([text],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportSettlementHTML(){
+  const R=buildSettlement();if(!R){toast('出張・旅を選択してください');return}
+  if(!R.rows.length&&!R.advance){toast('精算対象の記録がありません');return}
+  const pending=curLogs().filter(l=>l.type==='exp'&&l.quick).length;
+  if(pending&&!confirm(`⚡要編集の支出が${pending}件あります（内容・支払方法が未確定）。このまま精算書を作成しますか？`))return;
+  const {t,rows,byClass,total,advance,diff}=R;
+  const e=s=>escapeHtml(s==null?'':String(s));
+  const yen=n=>(n||0).toLocaleString();
+  const body=rows.map(l=>`<tr${l.cont===PERDIEM_CAT?' class="pd"':''}><td>${settleMD(l.date)}</td><td>${e(l.cn)}</td><td>${e(settlePlace(l))}</td><td>${settleClass(l)}</td><td>${e(settlePay(l))}</td><td class="n">${yen(l.amt)}</td><td>${e(settleNote(l))}</td></tr>`).join('');
+  const clsRows=SETTLE_CLASSES.map(c=>`<tr><td>${c}</td><td class="n">${yen(byClass[c])}</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>出張費精算書 ${e(t.name)}</title>
+<style>
+@page{size:A4;margin:14mm}
+body{font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;color:#111;margin:0;padding:16px;font-size:12px;background:#fff}
+.sheet{max-width:760px;margin:0 auto}
+h1{text-align:center;font-size:22px;letter-spacing:8px;margin:0 0 14px}
+.head{display:flex;justify-content:space-between;gap:16px;margin-bottom:12px;font-size:12.5px;line-height:1.9}
+.head .r{text-align:left;min-width:200px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #333;padding:4px 6px;vertical-align:middle}
+th{background:#eee;font-weight:700;text-align:center}
+td.n{text-align:right;font-family:'Courier New',monospace;white-space:nowrap}
+tr.pd td{background:#fafafa}
+.sum{display:flex;gap:16px;margin-top:14px;align-items:flex-start}
+.sum table{width:auto;min-width:200px}
+.tot td:first-child{font-weight:700;background:#eee}
+.diff td{font-weight:700}
+.note{font-size:10.5px;color:#555;margin-top:6px}
+.btn{display:block;margin:16px auto;padding:10px 24px;font-size:14px;font-weight:700;border:2px solid #111;background:#111;color:#fff;border-radius:8px}
+@media print{.btn{display:none}body{padding:0}}
+</style></head><body><div class="sheet">
+<h1>出張費精算書</h1>
+<div class="head">
+  <div>期間：${e(t.start||'')}${t.end?' ～ '+e(t.end):''}<br>目的地：${e(t.dest||'')}<br>概要：${e(t.summary||t.name)}</div>
+  <div class="r">提出日：${e(today())}<br>氏名：${e(S.userName||'')}<br>管理番号：${e(t.no||'')}</div>
+</div>
+<table><thead><tr><th>日付</th><th>内容</th><th>場所</th><th>区分</th><th>支払</th><th>金額</th><th>備考</th></tr></thead><tbody>${body||'<tr><td colspan="7" style="text-align:center;color:#888">精算対象の記録なし</td></tr>'}</tbody></table>
+<div class="sum">
+  <table><thead><tr><th colspan="2">経費区分別集計</th></tr></thead><tbody>${clsRows}</tbody></table>
+  <table><tbody>
+    <tr class="tot"><td>合計金額</td><td class="n">${yen(total)}</td></tr>
+    <tr class="tot"><td>仮払い</td><td class="n">${yen(advance)}</td></tr>
+    <tr class="tot diff"><td>差額</td><td class="n">${diff<0?'-':''}${yen(Math.abs(diff))}</td></tr>
+  </tbody></table>
+</div>
+<div class="note">差額がマイナスの場合は会社へ返金、プラスの場合は会社から追加支給。</div>
+<button class="btn" onclick="window.print()">🖨️ 印刷 / PDFに保存</button>
+</div></body></html>`;
+  downloadText(html,settleFileName(t,'html'),'text/html;charset=utf-8');
+  toast('🧾 精算書を書き出しました');
+}
+function exportSettlementCSV(){
+  const R=buildSettlement();if(!R){toast('出張・旅を選択してください');return}
+  const pending=curLogs().filter(l=>l.type==='exp'&&l.quick).length;
+  if(pending&&!confirm(`⚡要編集の支出が${pending}件あります（内容・支払方法が未確定）。このまま精算書を作成しますか？`))return;
+  const {t,rows,byClass,total,advance,diff}=R;
+  const q=v=>{const s=v==null?'':String(v);return/[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const lines=[];
+  lines.push('出張費精算書');
+  lines.push(['期間',(t.start||'')+(t.end?' ～ '+t.end:'')].map(q).join(','));
+  lines.push(['目的地',t.dest||''].map(q).join(','));
+  lines.push(['概要',t.summary||t.name].map(q).join(','));
+  lines.push(['提出日',today()].map(q).join(','));
+  lines.push(['氏名',S.userName||''].map(q).join(','));
+  lines.push(['管理番号',t.no||''].map(q).join(','));
+  lines.push('');
+  lines.push('日付,内容,場所,区分,支払,金額,備考');
+  rows.forEach(l=>lines.push([settleMD(l.date),l.cn,settlePlace(l),settleClass(l),settlePay(l),l.amt||0,settleNote(l)].map(q).join(',')));
+  lines.push('');
+  lines.push('経費区分別集計');
+  SETTLE_CLASSES.forEach(c=>lines.push([c,byClass[c]].join(',')));
+  lines.push('');
+  lines.push(['合計金額',total].join(','));
+  lines.push(['仮払い',advance].join(','));
+  lines.push(['差額',diff].join(','));
+  downloadText('\uFEFF'+lines.join('\n'),settleFileName(t,'csv'),'text/csv;charset=utf-8');
+  toast('🧾 精算書CSVを書き出しました');
+}
+
 // ══ HTML Export ══
 function exportHTML(){
   const t=curTrip();
   if(!t){toast('出張・旅を選択してください');return}
   const logs=curLogs();
-  const exps=logs.filter(l=>l.type==='exp');
-  const tot=exps.reduce((s,l)=>s+l.amt,0);
-  const seisan=exps.filter(l=>l.seisan).reduce((s,l)=>s+l.amt,0);
+  const M=calcMoney(logs);
+  const seisan=M.seisan,advanceTotal=M.advance,perdiemTotal=M.perdiem,refund=M.refund;
+  const walletAdvanceCash=M.wallet.advanceCash,walletCash=M.wallet.cash,walletSuica=M.wallet.suica,walletNanaco=M.wallet.nanaco;
 
   // group by date
   const byDate={};
@@ -1512,10 +1767,15 @@ function exportHTML(){
     <h1>${t.name}</h1>
     <div class="meta">${t.start||''}${t.end?' 〜 '+t.end:''}${t.summary?' · '+t.summary:''}</div>
   </div>
-  <div class="summary">
-    <div class="sum-item"><div class="lbl">全支出</div><div class="val red">¥${tot.toLocaleString()}</div></div>
-    <div class="sum-item"><div class="lbl">精算対象</div><div class="val blue">¥${seisan.toLocaleString()}</div></div>
-    <div class="sum-item"><div class="lbl">個人負担</div><div class="val">¥${(tot-seisan).toLocaleString()}</div></div>
+  <div class="summary" style="flex-wrap:wrap;gap:14px 28px">
+    <div class="sum-item"><div class="lbl">仮払金</div><div class="val">¥${advanceTotal.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">精算対象支出</div><div class="val blue">−¥${seisan.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">日当</div><div class="val blue">−¥${perdiemTotal.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">${refund>=0?'会社へ返金':'会社から追加支給'}</div><div class="val red">¥${Math.abs(refund).toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">仮払現金残</div><div class="val">¥${walletAdvanceCash.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">個人現金残</div><div class="val">¥${walletCash.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">Suica残</div><div class="val">¥${walletSuica.toLocaleString()}</div></div>
+    <div class="sum-item"><div class="lbl">nanaco残</div><div class="val">¥${walletNanaco.toLocaleString()}</div></div>
     <div class="sum-item"><div class="lbl">件数</div><div class="val">${logs.length}件</div></div>
   </div>
   <table>${rows}</table>
@@ -1565,6 +1825,9 @@ function parseAndImportCSV(text){
     '現金手持ち':'cash_hold','Suica残高':'suica_bal','ナナコ残高':'nanaco_bal',
     '電子マネー残高':'emoney_bal','Suicaチャージ':'suica_chg','ナナコチャージ':'nanaco_chg',
     'その他':'other',
+    '仮払金':'advance','資金移動':'fund_out','資金移動（入金・チャージ元）':'fund_out',
+    '現金手持ち（資金残高）':'cash_hold','Suica残高（資金残高）':'suica_bal','ナナコ残高（資金残高）':'nanaco_bal',
+    '電子マネー残高（資金残高）':'emoney_bal','Suicaチャージ（資金移動）':'suica_chg','ナナコチャージ（資金移動）':'nanaco_chg',
     // 旧名称の互換
     '食事':'meal','買物':'shopping',
   };
