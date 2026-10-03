@@ -63,7 +63,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 #page-action .fld input:not([type="text"].hhmm-wrap input),.fld select{font-size:17px}
 #page-action .place-input{font-size:17px}
 #page-action .fld select{font-size:17px}
-#page-action .fld input[type="date"]{font-size:19px}
+#page-action .fld input[type="date"]{font-size:17px}
 #page-action .ev-btn{font-size:16px}
 #page-action .ev-btn .ev-icon{font-size:24px}
 #page-action .gps-btn{font-size:14px}
@@ -74,7 +74,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 #page-expense .form-card h2{font-size:20px}
 #page-expense .fld label{font-size:13px}
 #page-expense .fld select{font-size:17px}
-#page-expense .fld input[type="date"]{font-size:19px}
+#page-expense .fld input[type="date"]{font-size:17px}
 #page-expense .fld input[type="number"]{font-size:26px}
 #page-expense .fld input[type="text"]{font-size:17px}
 #page-expense .copt .nm{font-size:12px}
@@ -191,8 +191,9 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .fld select option{background:var(--surface)}
 .fld input[type="date"]{font-family:var(--mono)}
 .fld input[type="number"]{font-family:var(--mono);font-size:22px;font-weight:700;text-align:right}
-.row2{display:flex;gap:8px;flex-wrap:wrap}
-.row2>.fld{flex:1;min-width:132px;margin-bottom:0}
+.row2{display:grid;grid-template-columns:minmax(152px,1.2fr) minmax(120px,1fr);gap:8px}
+.row2>.fld{margin-bottom:0;min-width:0}
+.row2 input{min-width:0}
 
 /* hhmm */
 .hhmm-wrap{position:relative}
