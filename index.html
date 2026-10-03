@@ -28,6 +28,7 @@
 .ev-pass    { --ec:var(--blue);   --eb:var(--blue-bg);   }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;font-size:16px}
 #app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:var(--bg)}
 
@@ -190,8 +191,8 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sa
 .fld select option{background:var(--surface)}
 .fld input[type="date"]{font-family:var(--mono)}
 .fld input[type="number"]{font-family:var(--mono);font-size:22px;font-weight:700;text-align:right}
-.row2{display:flex;gap:8px}
-.row2>.fld{flex:1;margin-bottom:0}
+.row2{display:flex;gap:8px;flex-wrap:wrap}
+.row2>.fld{flex:1;min-width:132px;margin-bottom:0}
 
 /* hhmm */
 .hhmm-wrap{position:relative}
@@ -436,7 +437,7 @@ input:checked+.slider::before{transform:translateX(20px)}
         <!-- Date + hhmm -->
         <div class="row2" style="margin-bottom:11px">
           <div class="fld" style="margin:0"><label>日付<span class="req">必須</span></label><input type="date" id="ac-date" onchange="checkActionValid()"></div>
-          <div class="fld" style="margin:0"><label>時刻 hhmm<span class="req">必須</span></label>
+          <div class="fld" style="margin:0"><label>時刻<span class="req">必須</span></label>
             <div class="hhmm-wrap"><input type="text" id="ac-hhmm" maxlength="4" inputmode="numeric" placeholder="0900" oninput="checkActionValid()"><span class="now-btn" onclick="setNow('ac-hhmm');checkActionValid()">今</span></div>
           </div>
         </div>
@@ -463,7 +464,7 @@ input:checked+.slider::before{transform:translateX(20px)}
         <div class="fld"><label>内容<span class="req">必須</span></label><div class="cpicker" id="cpicker"></div></div>
         <div class="row2" style="margin-bottom:11px">
           <div class="fld" style="margin:0"><label>日付<span class="req">必須</span></label><input type="date" id="exp-date" onchange="checkExpValid()"></div>
-          <div class="fld" style="margin:0"><label>時刻 hhmm<span class="req">必須</span></label>
+          <div class="fld" style="margin:0"><label>時刻<span class="req">必須</span></label>
             <div class="hhmm-wrap"><input type="text" id="exp-hhmm" maxlength="4" inputmode="numeric" placeholder="1040" oninput="checkExpValid()"><span class="now-btn" onclick="setNow('exp-hhmm');checkExpValid()">今</span></div>
           </div>
         </div>
